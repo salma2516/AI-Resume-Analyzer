@@ -1,0 +1,223 @@
+/* =========================================================
+   AI RESUME ANALYZER
+   GLOBAL STYLES
+========================================================= */
+
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+
+  --secondary: #7c3aed;
+
+  --text: #0f172a;
+  --text-secondary: #64748b;
+
+  --background: #f5f7fb;
+  --surface: #ffffff;
+
+  --border: #e2e8f0;
+
+  --success: #16a34a;
+  --warning: #f59e0b;
+  --danger: #dc2626;
+
+  --sidebar: #0b1730;
+
+  --font:
+    Inter,
+    Roboto,
+    "Segoe UI",
+    Arial,
+    sans-serif;
+
+  font-family: var(--font);
+
+  font-synthesis: none;
+
+  text-rendering: optimizeLegibility;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+/* =========================================================
+   GLOBAL RESET
+========================================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  width: 100%;
+  min-width: 100%;
+
+  margin: 0;
+  padding: 0;
+
+  overflow-x: hidden;
+}
+
+body {
+  width: 100%;
+  min-width: 100%;
+  min-height: 100vh;
+
+  margin: 0;
+  padding: 0;
+
+  background: var(--background);
+
+  color: var(--text);
+
+  font-family: var(--font);
+
+  overflow-x: hidden;
+}
+
+
+/* =========================================================
+   ROOT
+========================================================= */
+
+/*
+   IMPORTANT:
+   Do NOT use a fixed width such as:
+
+   width: 1126px;
+
+   That was causing the large empty space.
+*/
+
+#root {
+  width: 100%;
+  max-width: none;
+
+  min-width: 100%;
+  min-height: 100vh;
+
+  margin: 0;
+  padding: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  box-sizing: border-box;
+
+  text-align: left;
+}
+
+
+/* =========================================================
+   TYPOGRAPHY
+========================================================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin-top: 0;
+
+  font-family: var(--font);
+
+  color: var(--text);
+}
+
+p {
+  margin: 0;
+}
+
+
+/* =========================================================
+   LINKS
+========================================================= */
+
+a {
+  color: inherit;
+
+  text-decoration: none;
+}
+
+
+/* =========================================================
+   BUTTONS / FORM ELEMENTS
+========================================================= */
+
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   IMAGES
+========================================================= */
+
+img {
+  max-width: 100%;
+
+  height: auto;
+
+  display: block;
+}
+
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+
+/* =========================================================
+   TEXT SELECTION
+========================================================= */
+
+::selection {
+  background: rgba(37, 99, 235, 0.2);
+
+  color: #0f172a;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1024px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  body {
+    overflow-x: hidden;
+  }
+}

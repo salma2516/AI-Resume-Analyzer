@@ -1,0 +1,131 @@
+/* =========================================================
+   AI RESUME ANALYZER
+   APP-LEVEL STYLES
+========================================================= */
+
+/* ---------------------------------------------------------
+   APP ROOT
+--------------------------------------------------------- */
+
+.app {
+  width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+
+  margin: 0;
+  padding: 0;
+
+  box-sizing: border-box;
+}
+
+
+/* ---------------------------------------------------------
+   MAIN APPLICATION CONTAINER
+--------------------------------------------------------- */
+
+.app-container {
+  width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+
+  margin: 0;
+  padding: 0;
+
+  box-sizing: border-box;
+}
+
+
+/* ---------------------------------------------------------
+   PAGE CONTENT
+--------------------------------------------------------- */
+
+.page-content {
+  width: 100%;
+  max-width: 100%;
+
+  min-width: 0;
+
+  margin: 0;
+  padding: 0;
+
+  box-sizing: border-box;
+}
+
+
+/* ---------------------------------------------------------
+   DASHBOARD SECTIONS
+--------------------------------------------------------- */
+
+.dashboard-section {
+  width: 100%;
+  max-width: 100%;
+
+  min-width: 0;
+
+  margin: 0;
+
+  box-sizing: border-box;
+}
+
+
+/* ---------------------------------------------------------
+   UPLOAD SECTION
+--------------------------------------------------------- */
+
+#upload {
+  width: 100%;
+  max-width: 100%;
+
+  scroll-margin-top: 90px;
+
+  box-sizing: border-box;
+}
+
+
+/* ---------------------------------------------------------
+   RESPONSIVE
+--------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .app,
+  .app-container,
+  .page-content,
+  .dashboard-section {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+
+@media (max-width: 600px) {
+  .app,
+  .app-container,
+  .page-content,
+  .dashboard-section {
+    width: 100%;
+    min-width: 0;
+
+    padding: 0;
+    margin: 0;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   REMOVE HORIZONTAL OVERFLOW
+--------------------------------------------------------- */
+
+html,
+body,
+#root {
+  overflow-x: hidden;
+}
+
+
+/* ---------------------------------------------------------
+   GENERAL BOX SIZING
+--------------------------------------------------------- */
+
+* {
+  box-sizing: border-box;
+}
