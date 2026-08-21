@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,27 +10,18 @@ from fastapi.responses import FileResponse
 # PATH CONFIGURATION
 # =========================================================
 
-# main.py:
-#
 # backend/
 # ├── .env
 # └── app/
 #     └── main.py
-#
-# Therefore:
-# BASE_DIR = backend/app
 
 BASE_DIR = Path(__file__).resolve().parent
-
-# backend/
 BACKEND_DIR = BASE_DIR.parent
-
-# backend/.env
 ENV_FILE = BACKEND_DIR / ".env"
 
 
 # =========================================================
-# ENVIRONMENT VARIABLES
+# LOAD ENVIRONMENT VARIABLES
 # =========================================================
 
 try:
@@ -44,6 +36,7 @@ try:
         print("Loaded .env:")
         print(ENV_FILE)
         print("=" * 70)
+
     else:
         print("=" * 70)
         print("WARNING: .env FILE NOT FOUND")
@@ -55,24 +48,13 @@ try:
 except ImportError:
     print("=" * 70)
     print("WARNING: python-dotenv is not installed.")
-    print("Run:")
-    print("pip install python-dotenv")
+    print("Run: pip install python-dotenv")
     print("=" * 70)
 
 
 # =========================================================
 # API ROUTERS
 # =========================================================
-
-# IMPORTANT:
-# .env is loaded BEFORE these imports.
-#
-# This is important because:
-#
-# job_recommender.py
-# email_service.py
-#
-# read environment variables when they are imported.
 
 from app.api import analyze
 from app.api import auth
@@ -95,13 +77,10 @@ from app.database import models
 # =========================================================
 
 try:
-    models.Base.metadata.create_all(
-        bind=engine
-    )
 
-    print(
-        "Database tables initialized successfully."
-    )
+    models.Base.metadata.create_all(bind=engine)
+
+    print("Database tables initialized successfully.")
 
 except Exception as database_error:
 
@@ -109,13 +88,11 @@ except Exception as database_error:
     print("DATABASE INITIALIZATION ERROR")
     print("=" * 70)
 
-    print(
-        type(database_error).__name__
-    )
+    print("Error type:")
+    print(type(database_error).__name__)
 
-    print(
-        str(database_error)
-    )
+    print("Error:")
+    print(str(database_error))
 
     print("=" * 70)
 
@@ -127,20 +104,49 @@ except Exception as database_error:
 app = FastAPI(
     title="AI Resume Analyzer API",
     version="1.0.0",
+    description="AI-powered Resume Analysis and Job Matching API",
 )
 
 
 # =========================================================
-# CORS
+# CORS CONFIGURATION
 # =========================================================
+
+# Frontend URL can be provided through Render environment variable:
+#
+# FRONTEND_URL=https://your-frontend.onrender.com
+#
+# Local development URLs are also allowed.
+
+frontend_url = os.getenv("FRONTEND_URL")
+
+allowed_origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+if frontend_url:
+    allowed_origins.append(frontend_url)
+
+
+# Remove duplicates
+allowed_origins = list(set(allowed_origins))
+
+
+print("=" * 70)
+print("CORS CONFIGURATION")
+print("=" * 70)
+
+for origin in allowed_origins:
+    print("Allowed origin:", origin)
+
+print("=" * 70)
+
 
 app.add_middleware(
     CORSMiddleware,
 
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=allowed_origins,
 
     allow_credentials=True,
 
@@ -155,6 +161,7 @@ app.add_middleware(
 # =========================================================
 
 # backend/app/uploads/
+
 UPLOAD_DIR = BASE_DIR / "uploads"
 
 UPLOAD_DIR.mkdir(
@@ -164,6 +171,7 @@ UPLOAD_DIR.mkdir(
 
 
 # backend/app/reports/
+
 REPORT_DIR = BASE_DIR / "reports"
 
 REPORT_DIR.mkdir(
@@ -193,13 +201,6 @@ app.include_router(
 # =========================================================
 # REGISTER APPLICATION TRACKING ROUTES
 # =========================================================
-#
-# Final endpoints:
-#
-# POST /api/applications/mark-applied
-# GET  /api/applications
-# GET  /api/applications/{application_id}
-#
 
 app.include_router(
     application_router,
@@ -218,65 +219,36 @@ async def get_report():
     print("PDF REPORT REQUEST")
     print("=" * 70)
 
-    # -----------------------------------------------------
-    # PRIMARY LOCATION
-    # backend/app/uploads/resume_analysis_report.pdf
-    # -----------------------------------------------------
-
     upload_pdf = (
-        UPLOAD_DIR
-        / "resume_analysis_report.pdf"
+        UPLOAD_DIR /
+        "resume_analysis_report.pdf"
     )
-
-    # -----------------------------------------------------
-    # BACKUP LOCATION
-    # backend/app/reports/resume_analysis_report.pdf
-    # -----------------------------------------------------
 
     report_pdf = (
-        REPORT_DIR
-        / "resume_analysis_report.pdf"
+        REPORT_DIR /
+        "resume_analysis_report.pdf"
     )
 
-    print(
-        "Checking upload PDF:"
-    )
-
+    print("Checking upload PDF:")
     print(upload_pdf)
-
-    print(
-        "Exists:",
-        upload_pdf.exists(),
-    )
+    print("Exists:", upload_pdf.exists())
 
     print()
 
-    print(
-        "Checking report PDF:"
-    )
-
+    print("Checking report PDF:")
     print(report_pdf)
-
-    print(
-        "Exists:",
-        report_pdf.exists(),
-    )
+    print("Exists:", report_pdf.exists())
 
     print("=" * 70)
 
     # -----------------------------------------------------
-    # CHECK UPLOADS FOLDER
+    # CHECK UPLOADS
     # -----------------------------------------------------
 
     if upload_pdf.exists():
 
-        print(
-            "PDF FOUND IN UPLOADS FOLDER"
-        )
-
-        print(
-            "=" * 70 + "\n"
-        )
+        print("PDF FOUND IN UPLOADS FOLDER")
+        print("=" * 70)
 
         return FileResponse(
             path=str(upload_pdf),
@@ -285,18 +257,13 @@ async def get_report():
         )
 
     # -----------------------------------------------------
-    # CHECK REPORTS FOLDER
+    # CHECK REPORTS
     # -----------------------------------------------------
 
     if report_pdf.exists():
 
-        print(
-            "PDF FOUND IN REPORTS FOLDER"
-        )
-
-        print(
-            "=" * 70 + "\n"
-        )
+        print("PDF FOUND IN REPORTS FOLDER")
+        print("=" * 70)
 
         return FileResponse(
             path=str(report_pdf),
@@ -308,19 +275,13 @@ async def get_report():
     # PDF NOT FOUND
     # -----------------------------------------------------
 
-    print(
-        "PDF NOT FOUND"
-    )
-
-    print(
-        "=" * 70 + "\n"
-    )
+    print("PDF NOT FOUND")
+    print("=" * 70)
 
     raise HTTPException(
         status_code=404,
         detail=(
-            "Resume analysis report has not "
-            "been generated yet. "
+            "Resume analysis report has not been generated yet. "
             "Please analyze a resume first."
         ),
     )
@@ -334,9 +295,10 @@ async def get_report():
 def root():
 
     return {
-        "message": (
-            "AI Resume Analyzer API is Running"
-        )
+        "message": "AI Resume Analyzer API is Running",
+        "version": app.version,
+        "status": "healthy",
+        "docs": "/docs",
     }
 
 
@@ -348,7 +310,8 @@ def root():
 def health():
 
     return {
-        "status": "Healthy"
+        "status": "Healthy",
+        "service": "AI Resume Analyzer API",
     }
 
 
@@ -380,66 +343,48 @@ def application_health():
 @app.on_event("startup")
 async def startup_event():
 
-    print("\n")
+    print()
     print("=" * 70)
     print("AI RESUME ANALYZER API")
     print("=" * 70)
 
-    print(
-        "Application:",
-        app.title,
-    )
+    print("Application:", app.title)
+    print("Version:", app.version)
 
-    print(
-        "Version:",
-        app.version,
-    )
+    print()
+    print("Base directory:")
+    print(BASE_DIR)
 
-    print(
-        "Base directory:",
-        BASE_DIR,
-    )
+    print()
+    print("Backend directory:")
+    print(BACKEND_DIR)
 
-    print(
-        "Backend directory:",
-        BACKEND_DIR,
-    )
+    print()
+    print(".env:")
+    print(ENV_FILE)
 
-    print(
-        ".env:",
-        ENV_FILE,
-    )
+    print()
+    print("Upload directory:")
+    print(UPLOAD_DIR)
 
-    print(
-        "Upload directory:",
-        UPLOAD_DIR,
-    )
-
-    print(
-        "Report directory:",
-        REPORT_DIR,
-    )
+    print()
+    print("Report directory:")
+    print(REPORT_DIR)
 
     print()
     print("Important endpoints:")
-    print(
-        "POST /analyze/"
-    )
-    print(
-        "POST /api/applications/mark-applied"
-    )
-    print(
-        "GET  /api/applications"
-    )
-    print(
-        "GET  /api/applications/health"
-    )
-    print(
-        "GET  /api/report"
-    )
-    print(
-        "GET  /health"
-    )
+
+    print("GET  /")
+    print("GET  /health")
+    print("POST /analyze/")
+    print("POST /api/applications/mark-applied")
+    print("GET  /api/applications")
+    print("GET  /api/applications/health")
+    print("GET  /api/report")
+
+    print()
+    print("Swagger documentation:")
+    print("/docs")
 
     print("=" * 70)
     print("API STARTUP COMPLETE")
