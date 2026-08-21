@@ -20,7 +20,7 @@ export default function DownloadPDF() {
       setDownloading(true);
       setError("");
 
-      const reportUrl = "http://127.0.0.1:8000/api/report";
+      const reportUrl = `${import.meta.env.VITE_API_URL || "https://ai-resume-analyzer-1-xg6b.onrender.com"}/api/report`;
 
       const response = await fetch(reportUrl);
 

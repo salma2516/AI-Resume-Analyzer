@@ -24,7 +24,6 @@ const API_URL =
   import.meta.env.VITE_API_URL ||
   "https://ai-resume-analyzer-1-xg6b.onrender.com";
 
-
 // =========================================================
 // LOGIN COMPONENT
 // =========================================================
@@ -345,7 +344,7 @@ export default function Login() {
           .includes("failed to fetch")
       ) {
         setError(
-          "Unable to connect to the backend. Make sure FastAPI is running on http://127.0.0.1:8000."
+          "Unable to connect to the backend. Make sure FastAPI is running on https://ai-resume-analyzer-1-xg6b.onrender.com."
         );
       } else {
 

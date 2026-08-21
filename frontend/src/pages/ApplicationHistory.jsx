@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 
 const API_ROOT =
-  import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+  import.meta.env.VITE_API_URL || "https://ai-resume-analyzer-1-xg6b.onrender.com";
 
 const API_BASE = API_ROOT.replace(/\/+$/, "").endsWith("/api")
   ? API_ROOT.replace(/\/+$/, "")

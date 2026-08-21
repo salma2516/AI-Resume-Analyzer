@@ -18,7 +18,10 @@ export default function Report() {
   const [error, setError] = useState("");
 
   // FastAPI PDF endpoint
-  const reportUrl = "http://127.0.0.1:8000/api/report";
+  const reportUrl = `${
+  import.meta.env.VITE_API_URL ||
+  "https://ai-resume-analyzer-1-xg6b.onrender.com"
+}/api/report`;
 
   // =========================================================
   // OPEN REPORT
