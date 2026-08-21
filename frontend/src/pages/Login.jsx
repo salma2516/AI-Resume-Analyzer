@@ -1,430 +1,732 @@
-import React, { useState } from "react";
-import { GoogleLogin } from "@react-oauth/google";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../services/api";
 
-function Login() {
+import {
+  Box,
+  Typography,
+  Paper,
+  Divider,
+  Alert,
+  CircularProgress,
+} from "@mui/material";
+
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+
+import { GoogleLogin } from "@react-oauth/google";
+
+
+// =========================================================
+// API CONFIGURATION
+// =========================================================
+
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://ai-resume-analyzer-1-xg6b.onrender.com";
+
+// =========================================================
+// LOGIN COMPONENT
+// =========================================================
+
+export default function Login() {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleGoogleSuccess = async (credentialResponse) => {
-    console.log("========================================");
-    console.log("GOOGLE LOGIN SUCCESS CALLBACK");
-    console.log("========================================");
 
-    const credential = credentialResponse?.credential;
+  // =======================================================
+  // CHECK EXISTING LOGIN
+  // =======================================================
+
+  useEffect(() => {
+    const isLoggedIn =
+      localStorage.getItem("isLoggedIn") === "true";
+
+    const storedUser =
+      localStorage.getItem("aiResumeUser");
+
+    const googleToken =
+      sessionStorage.getItem("google_id_token") ||
+      localStorage.getItem("google_id_token");
+
+    const accessToken =
+      sessionStorage.getItem("access_token") ||
+      localStorage.getItem("access_token");
+
+    if (
+      isLoggedIn &&
+      storedUser &&
+      (googleToken || accessToken)
+    ) {
+      navigate("/dashboard", {
+        replace: true,
+      });
+    } else if (isLoggedIn || storedUser) {
+      // Remove incomplete/stale login state.
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("aiResumeUser");
+      localStorage.removeItem("google_id_token");
+      localStorage.removeItem("access_token");
+
+      sessionStorage.removeItem("google_id_token");
+      sessionStorage.removeItem("access_token");
+    }
+  }, [navigate]);
+
+
+  // =======================================================
+  // GOOGLE LOGIN SUCCESS
+  // =======================================================
+
+  const handleGoogleSuccess = async (
+    credentialResponse
+  ) => {
+    const credential =
+      credentialResponse?.credential;
+
+
+    // -------------------------------------------------------
+    // VALIDATE GOOGLE CREDENTIAL
+    // -------------------------------------------------------
 
     if (!credential) {
-      console.error("Google did not return a credential.");
-
       setError(
-        "Google did not return a valid login credential. Please try again."
+        "Google did not return a valid authentication credential."
       );
 
-      setLoading(false);
       return;
     }
 
-    console.log("Google credential received:", true);
-    console.log(
-      "Credential preview:",
-      `${credential.substring(0, 15)}...`
-    );
+
+    // -------------------------------------------------------
+    // START LOADING
+    // -------------------------------------------------------
+
+    // Remove a stale Google credential before starting a
+    // fresh Google sign-in flow.
+    sessionStorage.removeItem("google_id_token");
+
+    setLoading(true);
+    setError("");
+
 
     try {
-      setLoading(true);
-      setError("");
-
-      console.log("Sending credential to backend...");
       console.log(
-        "Backend URL:",
-        import.meta.env.VITE_API_URL
+        "Google credential received."
       );
 
-      const response = await api.post(
-        "/api/auth/google",
+      console.log(
+        "Connecting to:",
+        `${API_URL}/api/auth/google`
+      );
+
+
+      // =====================================================
+      // SEND CREDENTIAL TO FASTAPI
+      // =====================================================
+
+      const response = await fetch(
+        `${API_URL}/api/auth/google`,
         {
-          credential: credential,
-        },
-        {
-          timeout: 20000,
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+
+          body: JSON.stringify({
+            credential,
+          }),
         }
       );
 
-      console.log("========================================");
-      console.log("BACKEND GOOGLE LOGIN RESPONSE");
-      console.log("========================================");
-      console.log("Status:", response.status);
-      console.log("Data:", response.data);
 
-      const data = response.data || {};
+      // =====================================================
+      // READ BACKEND RESPONSE
+      // =====================================================
 
-      // --------------------------------------------------
-      // SAVE ACCESS TOKEN
-      // --------------------------------------------------
+      let data = {};
 
-      const accessToken =
-        data.access_token ||
-        data.accessToken ||
-        data.token;
+      const responseText =
+        await response.text();
 
-      if (accessToken) {
-        localStorage.setItem(
-          "access_token",
-          accessToken
-        );
-
-        console.log("Access token saved.");
-      } else {
-        console.warn(
-          "Backend did not return an access token."
-        );
+      if (responseText) {
+        try {
+          data = JSON.parse(responseText);
+        } catch {
+          console.warn(
+            "Backend returned non-JSON response."
+          );
+        }
       }
 
-      // --------------------------------------------------
-      // SAVE USER
-      // --------------------------------------------------
 
-      if (data.user) {
-        localStorage.setItem(
-          "user",
-          JSON.stringify(data.user)
-        );
-
-        console.log("User information saved.");
-      }
-
-      // --------------------------------------------------
-      // SAVE COMPLETE RESPONSE
-      // --------------------------------------------------
-
-      localStorage.setItem(
-        "auth_response",
-        JSON.stringify(data)
+      console.log(
+        "Backend status:",
+        response.status
       );
 
-      // --------------------------------------------------
+      console.log(
+        "Backend response:",
+        data
+      );
+
+
+      // =====================================================
+      // HANDLE BACKEND ERRORS
+      // =====================================================
+
+      if (!response.ok) {
+        let message =
+          data?.detail ||
+          "Google authentication failed.";
+
+
+        if (response.status === 400) {
+          message =
+            data?.detail ||
+            "The Google authentication request was invalid.";
+        }
+
+
+        if (response.status === 401) {
+          message =
+            data?.detail ||
+            "Google authentication was rejected. Please try signing in again.";
+        }
+
+
+        if (response.status === 404) {
+          message =
+            "The Google authentication API could not be found. Make sure the FastAPI backend is running.";
+        }
+
+
+        if (response.status === 500) {
+          message =
+            data?.detail ||
+            "The authentication server encountered an error.";
+        }
+
+
+        throw new Error(message);
+      }
+
+
+      // =====================================================
+      // VALIDATE SUCCESS RESPONSE
+      // =====================================================
+
+      if (
+        data?.success !== true ||
+        !data?.user
+      ) {
+        console.error(
+          "Invalid authentication response:",
+          data
+        );
+
+        throw new Error(
+          "Authentication succeeded, but the server did not return valid user information."
+        );
+      }
+
+
+      // =====================================================
+      // GET AUTHENTICATED USER
+      // =====================================================
+
+      const authenticatedUser =
+        data.user;
+
+
+      // =====================================================
       // SAVE LOGIN STATE
-      // --------------------------------------------------
+      // =====================================================
 
       localStorage.setItem(
-        "is_authenticated",
+        "isLoggedIn",
         "true"
       );
 
-      console.log(
-        "Google login successful."
+      localStorage.setItem(
+        "aiResumeUser",
+        JSON.stringify(
+          authenticatedUser
+        )
+      );
+
+
+      // =====================================================
+      // SAVE AUTHENTICATION TOKENS
+      // =====================================================
+
+      // Backend access token, when provided.
+      if (data.access_token) {
+        sessionStorage.setItem(
+          "access_token",
+          data.access_token
+        );
+
+        localStorage.setItem(
+          "access_token",
+          data.access_token
+        );
+      }
+
+      // IMPORTANT:
+      // Keep the original Google ID token for protected
+      // application-tracking endpoints such as:
+      //
+      // POST /api/applications/mark-applied
+      // GET  /api/applications
+      // PATCH /api/applications/{id}/status
+      //
+      // sessionStorage is used so the Google credential is
+      // cleared when the browser session ends.
+      // IMPORTANT:
+      // Jobs.jsx and ApplicationHistory.jsx use this token for
+      // protected application-tracking API requests.
+      //
+      // Store it in both locations so a route change or component
+      // reload does not leave the application without a token.
+      sessionStorage.setItem(
+        "google_id_token",
+        credential
+      );
+
+      localStorage.setItem(
+        "google_id_token",
+        credential
       );
 
       console.log(
-        "Redirecting to dashboard..."
+        "Google ID token stored for authenticated API calls."
       );
 
-      // Make sure loading is stopped before navigation
-      setLoading(false);
+
+      console.log(
+        "Google authentication successful."
+      );
+
+      console.log(
+        "Authenticated user:",
+        authenticatedUser
+      );
+
+
+      // =====================================================
+      // REDIRECT
+      // =====================================================
 
       navigate("/dashboard", {
         replace: true,
       });
 
     } catch (err) {
-      console.error("========================================");
-      console.error("GOOGLE LOGIN ERROR");
-      console.error("========================================");
-      console.error(err);
-
-      setLoading(false);
-
-      // --------------------------------------------------
-      // BACKEND RESPONDED WITH ERROR
-      // --------------------------------------------------
-
-      if (err.response) {
-        const status = err.response.status;
-        const backendData = err.response.data;
-
-        console.error(
-          "Backend status:",
-          status
-        );
-
-        console.error(
-          "Backend response:",
-          backendData
-        );
-
-        const detail =
-          backendData?.detail ||
-          backendData?.message ||
-          backendData?.error;
-
-        if (status === 400) {
-          setError(
-            detail ||
-              "Invalid Google login request. Please try signing in again."
-          );
-        } else if (status === 401) {
-          setError(
-            detail ||
-              "Google authentication was rejected. Please check the Google OAuth configuration."
-          );
-        } else if (status === 403) {
-          setError(
-            detail ||
-              "Google authentication is forbidden. Please check the OAuth settings."
-          );
-        } else if (status === 404) {
-          setError(
-            "Google login API endpoint was not found. Please check the backend URL."
-          );
-        } else if (status >= 500) {
-          setError(
-            detail ||
-              "The backend encountered an error while verifying your Google account."
-          );
-        } else {
-          setError(
-            detail ||
-              `Google authentication failed (${status}). Please try again.`
-          );
-        }
-
-        return;
-      }
-
-      // --------------------------------------------------
-      // REQUEST SENT BUT NO RESPONSE
-      // --------------------------------------------------
-
-      if (err.request) {
-        console.error(
-          "No response received from backend."
-        );
-
-        console.error(
-          "Configured API URL:",
-          import.meta.env.VITE_API_URL
-        );
-
-        setError(
-          "The backend did not respond. Please check the deployed API URL and Render backend service."
-        );
-
-        return;
-      }
-
-      // --------------------------------------------------
-      // REQUEST CONFIGURATION ERROR
-      // --------------------------------------------------
 
       console.error(
-        "Request configuration error:",
-        err.message
+        "Google authentication error:",
+        err
       );
 
-      setError(
-        "Unable to send the Google login request. Please try again."
-      );
+
+      // -----------------------------------------------------
+      // NETWORK ERROR
+      // -----------------------------------------------------
+
+      if (
+        err?.name === "TypeError" ||
+        err?.message
+          ?.toLowerCase()
+          .includes("failed to fetch")
+      ) {
+        setError(
+          "Unable to connect to the backend. Make sure FastAPI is running on https://ai-resume-analyzer-1-xg6b.onrender.com."
+        );
+      } else {
+
+        setError(
+          err?.message ||
+            "Unable to sign in with Google. Please try again."
+        );
+      }
+
+    } finally {
+      setLoading(false);
     }
   };
 
-  // ------------------------------------------------------
+
+  // =======================================================
   // GOOGLE LOGIN ERROR
-  // ------------------------------------------------------
+  // =======================================================
 
   const handleGoogleError = () => {
     console.error(
-      "Google Sign-In button returned an error."
+      "Google Login Failed."
     );
 
     setLoading(false);
 
     setError(
-      "Google Sign-In was cancelled or failed. Please select your Google account and try again."
+      "Google sign-in was cancelled or could not be completed. Please try again."
     );
   };
 
-  // ------------------------------------------------------
-  // CLOSE ERROR
-  // ------------------------------------------------------
 
-  const handleCloseError = () => {
+  // =======================================================
+  // CLEAR ERROR
+  // =======================================================
+
+  const clearError = () => {
     setError("");
-    setLoading(false);
   };
 
-  // ------------------------------------------------------
-  // LOGIN PAGE
-  // ------------------------------------------------------
+
+  // =======================================================
+  // UI
+  // =======================================================
 
   return (
-    <div className="login-page">
+    <Box
+      sx={{
+        minHeight: "100vh",
 
-      <div className="login-card">
+        width: "100%",
 
-        {/* ================================================
+        display: "flex",
+
+        alignItems: "center",
+
+        justifyContent: "center",
+
+        background:
+          "linear-gradient(135deg,#EFF6FF 0%,#EEF2FF 50%,#F5F3FF 100%)",
+
+        px: 2,
+
+        py: 4,
+
+        boxSizing: "border-box",
+      }}
+    >
+
+      {/* ===================================================
+          LOGIN CARD
+      =================================================== */}
+
+      <Paper
+        elevation={8}
+        sx={{
+          width: "100%",
+
+          maxWidth: 450,
+
+          borderRadius: 4,
+
+          overflow: "hidden",
+
+          boxShadow:
+            "0 20px 50px rgba(15,23,42,0.15)",
+        }}
+      >
+
+        {/* =================================================
             HEADER
         ================================================= */}
 
-        <div className="login-header">
+        <Box
+          sx={{
+            background:
+              "linear-gradient(135deg,#2563EB,#7C3AED)",
 
-          <div className="login-icon">
-            ✦
-          </div>
+            color: "#FFFFFF",
 
-          <h1>
+            textAlign: "center",
+
+            px: 4,
+
+            py: 5,
+          }}
+        >
+
+          <Box
+            sx={{
+              width: 70,
+
+              height: 70,
+
+              borderRadius: "20px",
+
+              margin: "0 auto 18px",
+
+              display: "flex",
+
+              alignItems: "center",
+
+              justifyContent: "center",
+
+              backgroundColor:
+                "rgba(255,255,255,0.18)",
+
+              border:
+                "1px solid rgba(255,255,255,0.25)",
+
+              boxShadow:
+                "0 8px 25px rgba(0,0,0,0.12)",
+            }}
+          >
+
+            <DescriptionOutlinedIcon
+              sx={{
+                fontSize: 42,
+              }}
+            />
+
+          </Box>
+
+
+          <Typography
+            variant="h4"
+            fontWeight={800}
+          >
             AI Resume Analyzer
-          </h1>
+          </Typography>
 
-          <p>
+
+          <Typography
+            sx={{
+              mt: 1,
+
+              opacity: 0.9,
+
+              fontSize: "0.98rem",
+            }}
+          >
             Build a resume that gets interviews
-          </p>
+          </Typography>
 
-        </div>
+        </Box>
 
 
-        {/* ================================================
+        {/* =================================================
             LOGIN CONTENT
         ================================================= */}
 
-        <div className="login-content">
+        <Box
+          sx={{
+            px: {
+              xs: 3,
+              sm: 4,
+            },
 
-          <div className="sparkle">
-            ✦
-          </div>
+            py: 5,
 
-          <h2>
+            textAlign: "center",
+          }}
+        >
+
+          <AutoAwesomeIcon
+            sx={{
+              color: "#7C3AED",
+
+              fontSize: 34,
+
+              mb: 1,
+            }}
+          />
+
+
+          <Typography
+            variant="h5"
+            fontWeight={700}
+            color="#0F172A"
+          >
             Welcome Back
-          </h2>
-
-          <p className="login-description">
-            Sign in securely with your Google account to
-            access your personalized resume analysis
-            dashboard.
-          </p>
+          </Typography>
 
 
-          {/* ==============================================
+          <Typography
+            sx={{
+              mt: 1,
+
+              mb: 3,
+
+              color: "#64748B",
+
+              lineHeight: 1.6,
+            }}
+          >
+            Sign in securely with your Google
+            account to access your personalized
+            resume analysis dashboard.
+          </Typography>
+
+
+          {/* =================================================
               ERROR MESSAGE
-          ============================================== */}
+          ================================================= */}
 
           {error && (
-            <div
-              className="login-error"
-              role="alert"
+            <Alert
+              severity="error"
+              onClose={clearError}
+              sx={{
+                mb: 3,
+
+                textAlign: "left",
+
+                borderRadius: 2,
+              }}
             >
-
-              <span className="error-icon">
-                ⚠️
-              </span>
-
-              <span className="error-message">
-                {error}
-              </span>
-
-              <button
-                type="button"
-                className="error-close"
-                onClick={handleCloseError}
-                aria-label="Close error"
-              >
-                ×
-              </button>
-
-            </div>
+              {error}
+            </Alert>
           )}
 
 
-          {/* ==============================================
+          {/* =================================================
               GOOGLE LOGIN
-          ============================================== */}
+          ================================================= */}
 
-          <div className="google-login-container">
+          <Box
+            sx={{
+              minHeight: 46,
+
+              display: "flex",
+
+              justifyContent: "center",
+
+              alignItems: "center",
+
+              mb: 3,
+            }}
+          >
 
             {loading ? (
 
-              <div className="login-loading">
+              <Box
+                sx={{
+                  display: "flex",
 
-                <div className="spinner"></div>
+                  flexDirection: "column",
 
-                <span>
-                  Signing you in...
-                </span>
+                  alignItems: "center",
 
-              </div>
+                  gap: 1,
+                }}
+              >
+
+                <CircularProgress
+                  size={30}
+                  thickness={4}
+                  sx={{
+                    color: "#2563EB",
+                  }}
+                />
+
+
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: "#64748B",
+                  }}
+                >
+                  Verifying your Google account...
+                </Typography>
+
+              </Box>
 
             ) : (
 
               <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={handleGoogleError}
+                onSuccess={
+                  handleGoogleSuccess
+                }
+
+                onError={
+                  handleGoogleError
+                }
+
                 useOneTap={false}
-                auto_select={false}
+
                 theme="outline"
+
                 size="large"
-                text="signin_with"
+
+                text="continue_with"
+
                 shape="rectangular"
-                width="350"
+
+                width="320"
               />
 
             )}
 
-          </div>
+          </Box>
 
 
-          {/* ==============================================
-              SECURITY DIVIDER
-          ============================================== */}
+          {/* =================================================
+              DIVIDER
+          ================================================= */}
 
-          <div className="secure-divider">
+          <Divider sx={{ my: 3 }}>
 
-            <span>
+            <Typography
+              sx={{
+                fontSize: 11,
+
+                color: "#94A3B8",
+
+                fontWeight: 700,
+
+                letterSpacing: "0.08em",
+              }}
+            >
               SECURE GOOGLE SIGN-IN
-            </span>
+            </Typography>
 
-          </div>
-
-
-          {/* ==============================================
-              SECURITY DESCRIPTION
-          ============================================== */}
-
-          <p className="secure-text">
-            Your Google account is securely verified by
-            our backend before you access the application.
-          </p>
+          </Divider>
 
 
-          {/* ==============================================
-              FOOTER
-          ============================================== */}
+          {/* =================================================
+              SECURITY MESSAGE
+          ================================================= */}
 
-          <div className="login-footer">
-            <span>
-              Resume analysis
-            </span>
+          <Typography
+            sx={{
+              fontSize: 13,
 
-            <span>•</span>
+              color: "#64748B",
 
-            <span>
-              Career insights
-            </span>
+              lineHeight: 1.7,
+            }}
+          >
+            Your Google account is securely
+            verified by our backend before you
+            access the application.
+          </Typography>
 
-            <span>•</span>
 
-            <span>
-              Interview preparation
-            </span>
-          </div>
+          <Typography
+            sx={{
+              mt: 2,
 
-        </div>
+              fontSize: 12,
 
-      </div>
+              color: "#94A3B8",
+            }}
+          >
+            Resume analysis • Career insights •
+            Interview preparation
+          </Typography>
 
-    </div>
+        </Box>
+
+      </Paper>
+
+    </Box>
   );
 }
-
-export default Login;

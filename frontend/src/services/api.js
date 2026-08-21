@@ -6,10 +6,39 @@ console.log("API URL:", API_URL);
 
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 20000,
   headers: {
     "Content-Type": "application/json",
   },
+  timeout: 30000,
 });
+
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("access_token");
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error("API ERROR:", {
+      url: error.config?.url,
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+
+    return Promise.reject(error);
+  }
+);
 
 export default api;

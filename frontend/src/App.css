@@ -1,485 +1,132 @@
 /* =========================================================
-   LOGIN PAGE
+   AI RESUME ANALYZER
+   APP-LEVEL STYLES
 ========================================================= */
 
-.login-page {
+/* -----------------
+----------------------------------------
+   APP ROOT
+--------------------------------------------------------- */
+
+.app {
+  width: 100%;
+  min-width: 0;
   min-height: 100vh;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 
-  padding: 40px 20px;
-
-  box-sizing: border-box;
-
-  background:
-    radial-gradient(
-      circle at top left,
-      rgba(99, 102, 241, 0.12),
-      transparent 35%
-    ),
-    radial-gradient(
-      circle at bottom right,
-      rgba(124, 58, 237, 0.12),
-      transparent 35%
-    ),
-    #f4f6ff;
-}
-
-
-/* =========================================================
-   LOGIN CARD
-========================================================= */
-
-.login-card {
-  width: 100%;
-  max-width: 520px;
-
-  background: #ffffff;
-
-  border-radius: 20px;
-
-  overflow: hidden;
-
-  box-shadow:
-    0 25px 60px rgba(15, 23, 42, 0.14);
-
-  border: 1px solid rgba(148, 163, 184, 0.15);
-}
-
-
-/* =========================================================
-   LOGIN HEADER
-========================================================= */
-
-.login-header {
-  width: 100%;
-
-  padding: 42px 30px 38px;
-
-  box-sizing: border-box;
-
-  text-align: center;
-
-  background:
-    linear-gradient(
-      135deg,
-      #315bea 0%,
-      #6237ed 55%,
-      #7c3aed 100%
-    );
-
-  color: #ffffff;
-}
-
-
-.login-icon {
-  width: 58px;
-  height: 58px;
-
-  margin: 0 auto 20px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 50%;
-
-  background: rgba(255, 255, 255, 0.18);
-
-  border: 1px solid rgba(255, 255, 255, 0.28);
-
-  font-size: 30px;
-
-  color: #ffffff;
-}
-
-
-.login-header h1 {
   margin: 0;
-
-  font-size: 30px;
-
-  line-height: 1.2;
-
-  font-weight: 700;
-
-  color: #ffffff;
-}
-
-
-.login-header p {
-  margin: 12px 0 0;
-
-  font-size: 16px;
-
-  line-height: 1.5;
-
-  color: rgba(255, 255, 255, 0.9);
-}
-
-
-/* =========================================================
-   LOGIN CONTENT
-========================================================= */
-
-.login-content {
-  padding: 44px 42px 38px;
-
-  text-align: center;
-
-  background: #ffffff;
-}
-
-
-.sparkle {
-  margin-bottom: 14px;
-
-  color: #7c3aed;
-
-  font-size: 34px;
-
-  line-height: 1;
-}
-
-
-.login-content h2 {
-  margin: 0;
-
-  font-size: 30px;
-
-  line-height: 1.25;
-
-  font-weight: 600;
-
-  color: #111827;
-}
-
-
-.login-description {
-  max-width: 390px;
-
-  margin: 14px auto 28px;
-
-  font-size: 16px;
-
-  line-height: 1.7;
-
-  color: #64748b;
-}
-
-
-/* =========================================================
-   ERROR BOX
-========================================================= */
-
-.login-error {
-  width: 100%;
+  padding: 0;
 
   box-sizing: border-box;
-
-  display: flex;
-
-  align-items: flex-start;
-
-  gap: 12px;
-
-  margin: 0 auto 20px;
-
-  padding: 14px 15px;
-
-  text-align: left;
-
-  border-radius: 10px;
-
-  border: 1px solid #fecaca;
-
-  background: #fff1f2;
-
-  color: #991b1b;
-
-  font-size: 14px;
-
-  line-height: 1.5;
 }
 
 
-.error-icon {
-  flex-shrink: 0;
+/* ---------------------------------------------------------
+   MAIN APPLICATION CONTAINER
+--------------------------------------------------------- */
 
-  font-size: 17px;
+.app-container {
+  width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+
+  margin: 0;
+  padding: 0;
+
+  box-sizing: border-box;
 }
 
 
-.error-message {
-  flex: 1;
+/* ---------------------------------------------------------
+   PAGE CONTENT
+--------------------------------------------------------- */
+
+.page-content {
+  width: 100%;
+  max-width: 100%;
 
   min-width: 0;
-}
 
-
-.error-close {
-  flex-shrink: 0;
-
-  border: none;
-
-  background: transparent;
-
-  color: #991b1b;
-
-  font-size: 23px;
-
-  line-height: 1;
-
-  cursor: pointer;
-
-  padding: 0 2px;
-
-  transition: opacity 0.2s ease;
-}
-
-
-.error-close:hover {
-  opacity: 0.65;
-}
-
-
-/* =========================================================
-   GOOGLE LOGIN
-========================================================= */
-
-.google-login-container {
-  width: 100%;
-
-  min-height: 46px;
-
-  display: flex;
-
-  justify-content: center;
-
-  align-items: center;
-
-  margin: 8px auto 28px;
-}
-
-
-.google-login-container > div {
-  max-width: 100%;
-}
-
-
-/* =========================================================
-   LOADING
-========================================================= */
-
-.login-loading {
-  width: 350px;
-
-  max-width: 100%;
-
-  min-height: 42px;
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  gap: 11px;
+  margin: 0;
+  padding: 0;
 
   box-sizing: border-box;
-
-  border: 1px solid #d1d5db;
-
-  border-radius: 4px;
-
-  color: #475569;
-
-  background: #ffffff;
-
-  font-size: 14px;
 }
 
 
-.spinner {
-  width: 18px;
+/* ---------------------------------------------------------
+   DASHBOARD SECTIONS
+--------------------------------------------------------- */
 
-  height: 18px;
+.dashboard-section {
+  width: 100%;
+  max-width: 100%;
 
-  border: 2px solid #dbeafe;
+  min-width: 0;
 
-  border-top-color: #4f46e5;
+  margin: 0;
 
-  border-radius: 50%;
-
-  animation: login-spin 0.75s linear infinite;
+  box-sizing: border-box;
 }
 
 
-@keyframes login-spin {
-  to {
-    transform: rotate(360deg);
+/* ---------------------------------------------------------
+   UPLOAD SECTION
+--------------------------------------------------------- */
+
+#upload {
+  width: 100%;
+  max-width: 100%;
+
+  scroll-margin-top: 90px;
+
+  box-sizing: border-box;
+}
+
+
+/* ---------------------------------------------------------
+   RESPONSIVE
+--------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .app,
+  .app-container,
+  .page-content,
+  .dashboard-section {
+    width: 100%;
+    max-width: 100%;
   }
 }
 
-
-/* =========================================================
-   SECURITY DIVIDER
-========================================================= */
-
-.secure-divider {
-  width: 100%;
-
-  display: flex;
-
-  align-items: center;
-
-  gap: 12px;
-
-  margin: 22px 0 20px;
-
-  color: #94a3b8;
-
-  font-size: 12px;
-
-  font-weight: 600;
-
-  letter-spacing: 0.8px;
-}
-
-
-.secure-divider::before,
-.secure-divider::after {
-  content: "";
-
-  flex: 1;
-
-  height: 1px;
-
-  background: #e2e8f0;
-}
-
-
-.secure-divider span {
-  white-space: nowrap;
-}
-
-
-/* =========================================================
-   SECURITY TEXT
-========================================================= */
-
-.secure-text {
-  max-width: 390px;
-
-  margin: 0 auto;
-
-  font-size: 14px;
-
-  line-height: 1.65;
-
-  color: #64748b;
-}
-
-
-/* =========================================================
-   FOOTER
-========================================================= */
-
-.login-footer {
-  margin-top: 28px;
-
-  display: flex;
-
-  justify-content: center;
-
-  flex-wrap: wrap;
-
-  gap: 7px;
-
-  font-size: 13px;
-
-  color: #94a3b8;
-}
-
-
-/* =========================================================
-   MOBILE
-========================================================= */
 
 @media (max-width: 600px) {
+  .app,
+  .app-container,
+  .page-content,
+  .dashboard-section {
+    width: 100%;
+    min-width: 0;
 
-  .login-page {
-    min-height: 100vh;
-
-    padding: 20px 12px;
-
-    align-items: flex-start;
-  }
-
-
-  .login-card {
-    margin-top: 20px;
-
-    border-radius: 16px;
-  }
-
-
-  .login-header {
-    padding: 34px 22px 30px;
-  }
-
-
-  .login-header h1 {
-    font-size: 25px;
-  }
-
-
-  .login-header p {
-    font-size: 14px;
-  }
-
-
-  .login-content {
-    padding: 34px 22px 30px;
-  }
-
-
-  .login-content h2 {
-    font-size: 26px;
-  }
-
-
-  .login-description {
-    font-size: 15px;
-  }
-
-
-  .login-footer {
-    font-size: 12px;
+    padding: 0;
+    margin: 0;
   }
 }
 
 
-/* =========================================================
-   VERY SMALL DEVICES
-========================================================= */
+/* ---------------------------------------------------------
+   REMOVE HORIZONTAL OVERFLOW
+--------------------------------------------------------- */
 
-@media (max-width: 380px) {
-
-  .login-header h1 {
-    font-size: 22px;
-  }
-
-
-  .login-content {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
+html,
+body,
+#root {
+  overflow-x: hidden;
+}
 
 
-  .login-description {
-    font-size: 14px;
-  }
+/* ---------------------------------------------------------
+   GENERAL BOX SIZING
+--------------------------------------------------------- */
+
+* {
+  box-sizing: border-box;
 }
