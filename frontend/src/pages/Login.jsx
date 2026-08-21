@@ -10,119 +10,353 @@ function Login() {
   const [error, setError] = useState("");
 
   const handleGoogleSuccess = async (credentialResponse) => {
+    console.log("========================================");
+    console.log("GOOGLE LOGIN SUCCESS CALLBACK");
+    console.log("========================================");
+
     const credential = credentialResponse?.credential;
 
-    console.log("Google credential received:", !!credential);
-
     if (!credential) {
-      setError("Google did not return a login credential.");
+      console.error("Google did not return a credential.");
+
+      setError(
+        "Google did not return a valid login credential. Please try again."
+      );
+
+      setLoading(false);
       return;
     }
+
+    console.log("Google credential received:", true);
+    console.log(
+      "Credential preview:",
+      `${credential.substring(0, 15)}...`
+    );
 
     try {
       setLoading(true);
       setError("");
 
-      const response = await api.post("/api/auth/google", {
-        credential: credential,
-      });
+      console.log("Sending credential to backend...");
+      console.log(
+        "Backend URL:",
+        import.meta.env.VITE_API_URL
+      );
 
-      console.log("Google authentication successful:", response.data);
+      const response = await api.post(
+        "/api/auth/google",
+        {
+          credential: credential,
+        },
+        {
+          timeout: 20000,
+        }
+      );
 
-      // Store token if your backend returns one
-      if (response.data?.access_token) {
+      console.log("========================================");
+      console.log("BACKEND GOOGLE LOGIN RESPONSE");
+      console.log("========================================");
+      console.log("Status:", response.status);
+      console.log("Data:", response.data);
+
+      const data = response.data || {};
+
+      // --------------------------------------------------
+      // SAVE ACCESS TOKEN
+      // --------------------------------------------------
+
+      const accessToken =
+        data.access_token ||
+        data.accessToken ||
+        data.token;
+
+      if (accessToken) {
         localStorage.setItem(
           "access_token",
-          response.data.access_token
+          accessToken
+        );
+
+        console.log("Access token saved.");
+      } else {
+        console.warn(
+          "Backend did not return an access token."
         );
       }
 
-      // Store user if returned
-      if (response.data?.user) {
+      // --------------------------------------------------
+      // SAVE USER
+      // --------------------------------------------------
+
+      if (data.user) {
         localStorage.setItem(
           "user",
-          JSON.stringify(response.data.user)
+          JSON.stringify(data.user)
         );
+
+        console.log("User information saved.");
       }
 
-      // Login successful
-      navigate("/dashboard");
+      // --------------------------------------------------
+      // SAVE COMPLETE RESPONSE
+      // --------------------------------------------------
+
+      localStorage.setItem(
+        "auth_response",
+        JSON.stringify(data)
+      );
+
+      // --------------------------------------------------
+      // SAVE LOGIN STATE
+      // --------------------------------------------------
+
+      localStorage.setItem(
+        "is_authenticated",
+        "true"
+      );
+
+      console.log(
+        "Google login successful."
+      );
+
+      console.log(
+        "Redirecting to dashboard..."
+      );
+
+      // Make sure loading is stopped before navigation
+      setLoading(false);
+
+      navigate("/dashboard", {
+        replace: true,
+      });
 
     } catch (err) {
-      console.error("Google authentication error:", err);
+      console.error("========================================");
+      console.error("GOOGLE LOGIN ERROR");
+      console.error("========================================");
+      console.error(err);
+
+      setLoading(false);
+
+      // --------------------------------------------------
+      // BACKEND RESPONDED WITH ERROR
+      // --------------------------------------------------
 
       if (err.response) {
-        console.error("Backend status:", err.response.status);
-        console.error("Backend response:", err.response.data);
+        const status = err.response.status;
+        const backendData = err.response.data;
+
+        console.error(
+          "Backend status:",
+          status
+        );
+
+        console.error(
+          "Backend response:",
+          backendData
+        );
+
+        const detail =
+          backendData?.detail ||
+          backendData?.message ||
+          backendData?.error;
+
+        if (status === 400) {
+          setError(
+            detail ||
+              "Invalid Google login request. Please try signing in again."
+          );
+        } else if (status === 401) {
+          setError(
+            detail ||
+              "Google authentication was rejected. Please check the Google OAuth configuration."
+          );
+        } else if (status === 403) {
+          setError(
+            detail ||
+              "Google authentication is forbidden. Please check the OAuth settings."
+          );
+        } else if (status === 404) {
+          setError(
+            "Google login API endpoint was not found. Please check the backend URL."
+          );
+        } else if (status >= 500) {
+          setError(
+            detail ||
+              "The backend encountered an error while verifying your Google account."
+          );
+        } else {
+          setError(
+            detail ||
+              `Google authentication failed (${status}). Please try again.`
+          );
+        }
+
+        return;
+      }
+
+      // --------------------------------------------------
+      // REQUEST SENT BUT NO RESPONSE
+      // --------------------------------------------------
+
+      if (err.request) {
+        console.error(
+          "No response received from backend."
+        );
+
+        console.error(
+          "Configured API URL:",
+          import.meta.env.VITE_API_URL
+        );
 
         setError(
-          err.response.data?.detail ||
-          "Google authentication failed."
+          "The backend did not respond. Please check the deployed API URL and Render backend service."
         );
-      } else if (err.request) {
-        setError(
-          "Unable to connect to the backend. Please try again."
-        );
-      } else {
-        setError(
-          "Something went wrong during Google Sign-In."
-        );
+
+        return;
       }
-    } finally {
-      setLoading(false);
+
+      // --------------------------------------------------
+      // REQUEST CONFIGURATION ERROR
+      // --------------------------------------------------
+
+      console.error(
+        "Request configuration error:",
+        err.message
+      );
+
+      setError(
+        "Unable to send the Google login request. Please try again."
+      );
     }
   };
 
+  // ------------------------------------------------------
+  // GOOGLE LOGIN ERROR
+  // ------------------------------------------------------
+
   const handleGoogleError = () => {
-    console.error("Google Sign-In failed.");
-    setError("Google Sign-In failed. Please try again.");
+    console.error(
+      "Google Sign-In button returned an error."
+    );
+
+    setLoading(false);
+
+    setError(
+      "Google Sign-In was cancelled or failed. Please select your Google account and try again."
+    );
   };
+
+  // ------------------------------------------------------
+  // CLOSE ERROR
+  // ------------------------------------------------------
+
+  const handleCloseError = () => {
+    setError("");
+    setLoading(false);
+  };
+
+  // ------------------------------------------------------
+  // LOGIN PAGE
+  // ------------------------------------------------------
 
   return (
     <div className="login-page">
+
       <div className="login-card">
 
+        {/* ================================================
+            HEADER
+        ================================================= */}
+
         <div className="login-header">
-          <div className="login-icon">✦</div>
 
-          <h1>AI Resume Analyzer</h1>
+          <div className="login-icon">
+            ✦
+          </div>
 
-          <p>Build a resume that gets interviews</p>
+          <h1>
+            AI Resume Analyzer
+          </h1>
+
+          <p>
+            Build a resume that gets interviews
+          </p>
+
         </div>
+
+
+        {/* ================================================
+            LOGIN CONTENT
+        ================================================= */}
 
         <div className="login-content">
 
-          <div className="sparkle">✦</div>
+          <div className="sparkle">
+            ✦
+          </div>
 
-          <h2>Welcome Back</h2>
+          <h2>
+            Welcome Back
+          </h2>
 
           <p className="login-description">
-            Sign in securely with your Google account to access
-            your personalized resume analysis dashboard.
+            Sign in securely with your Google account to
+            access your personalized resume analysis
+            dashboard.
           </p>
 
+
+          {/* ==============================================
+              ERROR MESSAGE
+          ============================================== */}
+
           {error && (
-            <div className="login-error">
-              <span>⚠️</span>
-              <span>{error}</span>
+            <div
+              className="login-error"
+              role="alert"
+            >
+
+              <span className="error-icon">
+                ⚠️
+              </span>
+
+              <span className="error-message">
+                {error}
+              </span>
 
               <button
                 type="button"
-                onClick={() => setError("")}
+                className="error-close"
+                onClick={handleCloseError}
+                aria-label="Close error"
               >
                 ×
               </button>
+
             </div>
           )}
+
+
+          {/* ==============================================
+              GOOGLE LOGIN
+          ============================================== */}
 
           <div className="google-login-container">
 
             {loading ? (
+
               <div className="login-loading">
+
                 <div className="spinner"></div>
-                <span>Signing you in...</span>
+
+                <span>
+                  Signing you in...
+                </span>
+
               </div>
+
             ) : (
+
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
                 onError={handleGoogleError}
@@ -134,25 +368,61 @@ function Login() {
                 shape="rectangular"
                 width="350"
               />
+
             )}
 
           </div>
 
+
+          {/* ==============================================
+              SECURITY DIVIDER
+          ============================================== */}
+
           <div className="secure-divider">
-            <span>SECURE GOOGLE SIGN-IN</span>
+
+            <span>
+              SECURE GOOGLE SIGN-IN
+            </span>
+
           </div>
 
+
+          {/* ==============================================
+              SECURITY DESCRIPTION
+          ============================================== */}
+
           <p className="secure-text">
-            Your Google account is securely verified by our
-            backend before you access the application.
+            Your Google account is securely verified by
+            our backend before you access the application.
           </p>
 
+
+          {/* ==============================================
+              FOOTER
+          ============================================== */}
+
           <div className="login-footer">
-            Resume analysis • Career insights • Interview preparation
+            <span>
+              Resume analysis
+            </span>
+
+            <span>•</span>
+
+            <span>
+              Career insights
+            </span>
+
+            <span>•</span>
+
+            <span>
+              Interview preparation
+            </span>
           </div>
 
         </div>
+
       </div>
+
     </div>
   );
 }

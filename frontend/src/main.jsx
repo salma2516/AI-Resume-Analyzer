@@ -8,17 +8,13 @@ import "./index.css";
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 if (!googleClientId) {
-  console.error("❌ Google Client ID is missing");
+  console.error("Google Client ID is missing.");
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    {googleClientId ? (
-      <GoogleOAuthProvider clientId={googleClientId}>
-        <App />
-      </GoogleOAuthProvider>
-    ) : (
+    <GoogleOAuthProvider clientId={googleClientId}>
       <App />
-    )}
+    </GoogleOAuthProvider>
   </React.StrictMode>
 );

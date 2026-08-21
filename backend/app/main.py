@@ -77,10 +77,13 @@ from app.database import models
 # =========================================================
 
 try:
-
     models.Base.metadata.create_all(bind=engine)
 
+    print("=" * 70)
+    print("DATABASE")
+    print("=" * 70)
     print("Database tables initialized successfully.")
+    print("=" * 70)
 
 except Exception as database_error:
 
@@ -112,25 +115,29 @@ app = FastAPI(
 # CORS CONFIGURATION
 # =========================================================
 
-# Frontend URL can be provided through Render environment variable:
-#
-# FRONTEND_URL=https://your-frontend.onrender.com
-#
-# Local development URLs are also allowed.
+# Render frontend:
+# https://ai-resume-analyzer-frontend-gikb.onrender.com
 
 frontend_url = os.getenv("FRONTEND_URL")
 
 allowed_origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+
+    # Production frontend
+    "https://ai-resume-analyzer-frontend-gikb.onrender.com",
 ]
 
+# Add FRONTEND_URL from Render if available
 if frontend_url:
-    allowed_origins.append(frontend_url)
+    frontend_url = frontend_url.strip().rstrip("/")
+
+    if frontend_url not in allowed_origins:
+        allowed_origins.append(frontend_url)
 
 
 # Remove duplicates
-allowed_origins = list(set(allowed_origins))
+allowed_origins = list(dict.fromkeys(allowed_origins))
 
 
 print("=" * 70)
@@ -145,13 +152,9 @@ print("=" * 70)
 
 app.add_middleware(
     CORSMiddleware,
-
     allow_origins=allowed_origins,
-
     allow_credentials=True,
-
     allow_methods=["*"],
-
     allow_headers=["*"],
 )
 
@@ -161,7 +164,6 @@ app.add_middleware(
 # =========================================================
 
 # backend/app/uploads/
-
 UPLOAD_DIR = BASE_DIR / "uploads"
 
 UPLOAD_DIR.mkdir(
@@ -171,7 +173,6 @@ UPLOAD_DIR.mkdir(
 
 
 # backend/app/reports/
-
 REPORT_DIR = BASE_DIR / "reports"
 
 REPORT_DIR.mkdir(
@@ -206,6 +207,48 @@ app.include_router(
     application_router,
     prefix="/api",
 )
+
+
+# =========================================================
+# ROOT ENDPOINT
+# =========================================================
+
+@app.get("/")
+def root():
+    return {
+        "message": "AI Resume Analyzer API is Running",
+        "version": app.version,
+        "status": "healthy",
+        "docs": "/docs",
+    }
+
+
+# =========================================================
+# HEALTH CHECK
+# =========================================================
+
+@app.get("/health")
+def health():
+    return {
+        "status": "Healthy",
+        "service": "AI Resume Analyzer API",
+    }
+
+
+# =========================================================
+# APPLICATION TRACKING HEALTH CHECK
+# =========================================================
+
+@app.get("/api/applications/health")
+def application_health():
+    return {
+        "status": "Healthy",
+        "service": "Application Tracking",
+        "endpoints": {
+            "mark_applied": "/api/applications/mark-applied",
+            "list_applications": "/api/applications",
+        },
+    }
 
 
 # =========================================================
@@ -288,55 +331,6 @@ async def get_report():
 
 
 # =========================================================
-# ROOT ENDPOINT
-# =========================================================
-
-@app.get("/")
-def root():
-
-    return {
-        "message": "AI Resume Analyzer API is Running",
-        "version": app.version,
-        "status": "healthy",
-        "docs": "/docs",
-    }
-
-
-# =========================================================
-# HEALTH CHECK
-# =========================================================
-
-@app.get("/health")
-def health():
-
-    return {
-        "status": "Healthy",
-        "service": "AI Resume Analyzer API",
-    }
-
-
-# =========================================================
-# APPLICATION TRACKING HEALTH CHECK
-# =========================================================
-
-@app.get("/api/applications/health")
-def application_health():
-
-    return {
-        "status": "Healthy",
-        "service": "Application Tracking",
-        "endpoints": {
-            "mark_applied":
-                "/api/applications/mark-applied",
-
-            "list_applications":
-                "/api/applications",
-
-        },
-    }
-
-
-# =========================================================
 # STARTUP INFORMATION
 # =========================================================
 
@@ -372,11 +366,16 @@ async def startup_event():
     print(REPORT_DIR)
 
     print()
+    print("Frontend URL:")
+    print(frontend_url)
+
+    print()
     print("Important endpoints:")
 
     print("GET  /")
     print("GET  /health")
     print("POST /analyze/")
+    print("POST /api/auth/google")
     print("POST /api/applications/mark-applied")
     print("GET  /api/applications")
     print("GET  /api/applications/health")
