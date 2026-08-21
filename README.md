@@ -1,0 +1,125 @@
+# 🤖 AI Resume Analyzer
+
+AI-powered resume analysis and job recommendation platform that helps job seekers analyze their resumes, compare them with job descriptions, identify skill gaps, and prepare for interviews.
+
+## 🌐 Live Demo
+
+🔗 [Live Demo](https://ai-resume-analyzer-frontend-gikb.onrender.com/)
+
+## ✨ Features
+
+- 📄 Upload PDF resumes
+- 🎯 ATS score analysis
+- 📊 Resume score
+- 💼 Job match score
+- 🧠 AI-powered resume suggestions
+- 🔍 Skill gap identification
+- 💼 Job recommendations
+- 🗺️ Career roadmap
+- 🎤 Interview question generation
+- ✉️ AI-generated cover letter
+- 📑 Resume analysis report
+- 📥 Downloadable PDF report
+- 🔐 Google authentication
+- 📈 Interactive dashboard and charts
+
+## 📸 Screenshots
+
+### 🔐 Login
+
+![Login](screenshot/login.png)
+
+### 📊 Dashboard
+
+![Dashboard](screenshot/dashboard.png)
+
+### 📄 Resume Analysis
+
+![Resume Analysis](screenshot/resume_analysis.png)
+
+### 💼 Job Recommendations
+
+![Job Recommendations](screenshot/job_recommendation.png)
+
+### 📑 Resume Analysis Report
+
+![Resume Analysis Report](screenshot/report.png)
+
+## 🛠️ Tech Stack
+
+### Frontend
+
+- React
+- JavaScript
+- Axios
+- Material UI
+- Chart.js
+- HTML
+- CSS
+
+### Backend
+
+- Python
+- FastAPI
+- REST API
+
+### AI
+
+- Generative AI
+- Resume analysis
+- Job matching
+- AI recommendations
+- Interview preparation
+- Cover letter generation
+
+### Authentication
+
+- Google Authentication
+- JWT Authentication
+
+### Deployment
+
+- GitHub
+- Render
+- Docker
+
+## 🔄 How It Works
+
+1. User signs in using Google authentication.
+2. User uploads their PDF resume.
+3. User enters a target job description.
+4. Frontend sends the resume and job description to the FastAPI backend.
+5. Backend processes the resume.
+6. AI analyzes the resume against the job requirements.
+7. The system generates:
+   - ATS score
+   - Resume score
+   - Job match score
+   - Missing skills
+   - Improvement suggestions
+   - Interview questions
+   - Career roadmap
+   - Cover letter
+8. Results are displayed on the dashboard.
+9. Relevant job recommendations are provided.
+10. User can generate and download the analysis report.
+
+## 🏗️ Project Structure
+
+```text
+AI-Resume-Analyzer/
+│
+├── backend/
+├── frontend/
+├── screenshot/
+│   ├── dashboard.png
+│   ├── job_recommendation.png
+│   ├── login.png
+│   ├── report.png
+│   └── resume_analysis.png
+│
+├── docker/
+├── .env.example
+├── .gitignore
+├── docker-compose.yml
+└── README.md
