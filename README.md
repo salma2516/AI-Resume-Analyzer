@@ -91,6 +91,60 @@ AI-powered resume analysis and job recommendation platform that helps job seeker
 
 ---
 
+## 🔮 Future Improvements
+
+- LinkedIn profile analysis
+- Resume builder
+- Multiple resume versions
+- Job application tracking
+- Advanced ATS keyword analysis
+- More job-board integrations
+- Personalized learning recommendations
+- Skill-gap learning resources
+- Resume comparison
+- Advanced career analytics
+
+---
+
+## 👩‍💻 Author
+
+### Salma S
+
+**Computer Science Engineering | AI & Machine Learning**
+
+GitHub:
+
+🔗 [github.com/salma2516](https://github.com/salma2516)
+
+---
+
+## ⭐ Project Highlights
+
+This project demonstrates practical experience with:
+
+- React
+- JavaScript
+- Python
+- FastAPI
+- REST APIs
+- AI/ML integration
+- Generative AI
+- Resume analysis
+- Job matching
+- Skill gap analysis
+- Authentication
+- Data visualization
+- PDF report generation
+- Docker
+- Cloud deployment
+- Git & GitHub
+
+---
+
+## 📄 License
+
+This project is developed for educational, portfolio, and demonstration purposes.
+
 ## 🔄 How It Works
 
 1. User signs in using Google authentication.
