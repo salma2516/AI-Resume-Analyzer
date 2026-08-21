@@ -1,50 +1,46 @@
 import React, { useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
+import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 
 function Login() {
+  const navigate = useNavigate();
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleGoogleSuccess = async (credentialResponse) => {
-    console.log("Google credential received");
+    console.log("Google login callback received");
 
-    if (!credentialResponse?.credential) {
-      setError("Google did not return a valid credential.");
+    const credential = credentialResponse?.credential;
+
+    if (!credential) {
+      console.error("Google did not return an ID token");
+      setError("Google authentication failed. No credential received.");
       return;
     }
 
+    console.log("Google ID token received");
     setLoading(true);
     setError("");
 
     try {
-      console.log("Sending credential to backend...");
+      const response = await api.post("/api/auth/google", {
+        credential: credential,
+      });
 
-      const response = await api.post(
-        "/api/auth/google",
-        {
-          credential: credentialResponse.credential,
-        },
-        {
-          timeout: 30000,
-        }
-      );
+      console.log("Backend authentication successful");
+      console.log("Response:", response.data);
 
-      console.log("Backend authentication successful:", response.data);
-
-      // Save token if your backend returns one
+      // Save returned user/token if your backend provides one
       if (response.data?.token) {
         localStorage.setItem("token", response.data.token);
       }
 
       if (response.data?.access_token) {
-        localStorage.setItem(
-          "access_token",
-          response.data.access_token
-        );
+        localStorage.setItem("access_token", response.data.access_token);
       }
 
-      // Save user information if returned
       if (response.data?.user) {
         localStorage.setItem(
           "user",
@@ -53,254 +49,125 @@ function Login() {
       }
 
       // Go to dashboard
-      window.location.href = "/dashboard";
+      navigate("/dashboard");
 
-    } catch (err) {
-      console.error("Backend authentication failed:", err);
+    } catch (error) {
+      console.error("Backend authentication failed:", error);
 
-      if (err.response) {
-        console.error("Status:", err.response.status);
-        console.error("Backend response:", err.response.data);
+      if (error.response) {
+        console.error("Status:", error.response.status);
+        console.error("Backend response:", error.response.data);
 
         setError(
-          err.response.data?.detail ||
-            "Google authentication failed."
+          error.response.data?.detail ||
+            `Authentication failed (${error.response.status})`
         );
-      } else if (err.code === "ECONNABORTED") {
-        setError(
-          "The backend took too long to respond. Please try again."
-        );
-      } else if (err.request) {
+      } else if (error.request) {
+        console.error("No response received from backend");
+
         setError(
           "Unable to connect to the backend. Please check the deployed API."
         );
       } else {
-        setError(
-          err.message || "Something went wrong during login."
-        );
-      }
+        console.error("Request error:", error.message);
 
+        setError("Something went wrong during Google authentication.");
+      }
+    } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleError = () => {
     console.error("Google Login Failed");
-    setLoading(false);
-    setError("Google Sign-In failed. Please try again.");
+
+    setError(
+      "Google Sign-In failed. Please try again."
+    );
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#f3f6ff",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        padding: "30px 15px",
-        boxSizing: "border-box",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "515px",
-          background: "#ffffff",
-          borderRadius: "0 0 18px 18px",
-          overflow: "hidden",
-          boxShadow: "0 20px 50px rgba(40, 50, 100, 0.15)",
-        }}
-      >
-        {/* Header */}
-        <div
-          style={{
-            background:
-              "linear-gradient(135deg, #3f51e8, #7b35e8)",
-            padding: "55px 30px",
-            textAlign: "center",
-            color: "#111",
-          }}
-        >
-          <div
-            style={{
-              fontSize: "42px",
-              marginBottom: "15px",
-              color: "#ffffff",
-            }}
-          >
-            ◉
-          </div>
+    <div className="login-page">
 
-          <h1
-            style={{
-              margin: 0,
-              fontSize: "38px",
-              fontWeight: "500",
-              color: "#111",
-            }}
-          >
-            AI Resume Analyzer
-          </h1>
+      <div className="login-container">
 
-          <p
-            style={{
-              marginTop: "15px",
-              marginBottom: 0,
-              fontSize: "19px",
-              color: "#ffffff",
-            }}
-          >
-            Build a resume that gets interviews
-          </p>
-        </div>
-
-        {/* Login content */}
-        <div
-          style={{
-            padding: "50px 35px 60px",
-            textAlign: "center",
-          }}
-        >
-          <div
-            style={{
-              fontSize: "42px",
-              marginBottom: "18px",
-            }}
-          >
+        <div className="login-header">
+          <div className="login-icon">
             ✦
           </div>
 
-          <h2
-            style={{
-              fontSize: "28px",
-              fontWeight: "500",
-              margin: "0 0 12px",
-              color: "#111",
-            }}
-          >
-            Welcome Back
-          </h2>
+          <h1>AI Resume Analyzer</h1>
 
-          <p
-            style={{
-              fontSize: "18px",
-              lineHeight: "1.6",
-              color: "#58708f",
-              margin: "0 auto 30px",
-              maxWidth: "430px",
-            }}
-          >
+          <p>Build a resume that gets interviews</p>
+        </div>
+
+        <div className="login-content">
+
+          <div className="sparkle">
+            ✦
+          </div>
+
+          <h2>Welcome Back</h2>
+
+          <p className="login-description">
             Sign in securely with your Google account to access
             your personalized resume analysis dashboard.
           </p>
 
-          {/* Error */}
           {error && (
-            <div
-              style={{
-                background: "#fff0f0",
-                border: "1px solid #ffd0d0",
-                borderRadius: "10px",
-                padding: "14px 18px",
-                marginBottom: "25px",
-                color: "#b42318",
-                textAlign: "left",
-                fontSize: "15px",
-                lineHeight: "1.5",
-              }}
-            >
-              <strong>Unable to sign in</strong>
-              <div>{error}</div>
+            <div className="login-error">
+              <span>⚠</span>
+              <span>{error}</span>
+
+              <button
+                type="button"
+                onClick={() => setError("")}
+                className="error-close"
+              >
+                ×
+              </button>
             </div>
           )}
 
-          {/* Google login */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              minHeight: "45px",
-            }}
-          >
-            {!loading ? (
+          {loading ? (
+            <div className="login-loading">
+              <div className="spinner"></div>
+              <p>Signing you in...</p>
+            </div>
+          ) : (
+            <div className="google-login">
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
                 onError={handleGoogleError}
                 useOneTap={false}
                 theme="outline"
                 size="large"
-                text="continue_with"
+                text="signin_with"
                 shape="rectangular"
+                width="350"
               />
-            ) : (
-              <div
-                style={{
-                  color: "#536b88",
-                  fontSize: "16px",
-                  padding: "12px",
-                }}
-              >
-                Signing in...
-              </div>
-            )}
+            </div>
+          )}
+
+          <div className="secure-divider">
+            <span></span>
+            <p>SECURE GOOGLE SIGN-IN</p>
+            <span></span>
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              margin: "35px 0",
-              color: "#9aa8bb",
-              fontSize: "13px",
-              letterSpacing: "1px",
-            }}
-          >
-            <div
-              style={{
-                height: "1px",
-                background: "#dfe4ec",
-                flex: 1,
-              }}
-            />
-
-            SECURE GOOGLE SIGN-IN
-
-            <div
-              style={{
-                height: "1px",
-                background: "#dfe4ec",
-                flex: 1,
-              }}
-            />
-          </div>
-
-          <p
-            style={{
-              color: "#58708f",
-              fontSize: "15px",
-              lineHeight: "1.6",
-              margin: "0 auto 25px",
-              maxWidth: "410px",
-            }}
-          >
-            Your Google account is securely verified by our
-            backend before you access the application.
+          <p className="secure-text">
+            Your Google account is securely verified by our backend
+            before you access the application.
           </p>
 
-          <p
-            style={{
-              color: "#8ba0bd",
-              fontSize: "14px",
-              margin: 0,
-            }}
-          >
-            Resume analysis • Career insights • Interview
-            preparation
+          <p className="login-footer">
+            Resume analysis • Career insights • Interview preparation
           </p>
+
         </div>
+
       </div>
+
     </div>
   );
 }
