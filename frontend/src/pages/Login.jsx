@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
-import api from "../api/api";
+import api from "../services/api";
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
