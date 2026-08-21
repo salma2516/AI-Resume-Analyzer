@@ -120,9 +120,20 @@ AI-powered resume analysis and job recommendation platform that helps job seeker
 AI-Resume-Analyzer/
 │
 ├── backend/
-│   ├── main.py
-│   ├── requirements.txt
-│   └── ...
+│   ├── app/
+│   │   ├── api/
+│   │   ├── core/
+│   │   ├── database/
+│   │   ├── models/
+│   │   ├── reports/
+│   │   ├── schemas/
+│   │   ├── services/
+│   │   ├── uploads/
+│   │   ├── utils/
+│   │   ├── application_router.py
+│   │   └── main.py
+│   │
+│   └── requirements.txt
 │
 ├── frontend/
 │   ├── src/
@@ -143,48 +154,3 @@ AI-Resume-Analyzer/
 ├── .gitignore
 ├── docker-compose.yml
 └── README.md
-
-
-## 🔮 Future Improvements
-
-- LinkedIn profile analysis
-- Resume builder
-- Multiple resume versions
-- Job application tracking
-- Advanced ATS keyword analysis
-- More job-board integrations
-- Personalized learning recommendations
-- Skill-gap learning resources
-- Resume comparison
-- Advanced career analytics
-
-## 👩‍💻 Author
-
-### Salma S
-
-Computer Science Engineering | AI & Machine Learning
-
-GitHub: https://github.com/salma2516
-
-## ⭐ Project Highlights
-
-This project demonstrates practical experience with:
-
-- React
-- Python
-- FastAPI
-- REST APIs
-- AI/ML integration
-- Generative AI
-- Resume analysis
-- Job matching
-- Authentication
-- Data visualization
-- PDF report generation
-- Docker
-- Cloud deployment
-- Git & GitHub
-
-## 📄 License
-
-This project is developed for educational, portfolio, and demonstration purposes.
