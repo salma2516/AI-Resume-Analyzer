@@ -12,8 +12,9 @@ import {
   Typography,
 } from "@mui/material";
 
-const API_BASE =
-  import.meta.env.VITE_API_URL || "https://ai-resume-analyzer-1-xg6b.onrender.com";
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://ai-resume-analyzer-1-xg6b.onrender.com";
 
 const APPLIED_JOBS_KEY = "appliedJobs";
 
