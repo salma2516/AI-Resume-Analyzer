@@ -10,11 +10,12 @@ function Login() {
   const [error, setError] = useState("");
 
   const handleGoogleSuccess = async (credentialResponse) => {
-    console.log("✅ Google login successful");
-    console.log("Credential received:", !!credentialResponse?.credential);
+    const credential = credentialResponse?.credential;
 
-    if (!credentialResponse?.credential) {
-      setError("Google did not return a valid credential.");
+    console.log("Google credential received:", !!credential);
+
+    if (!credential) {
+      setError("Google did not return a login credential.");
       return;
     }
 
@@ -22,16 +23,13 @@ function Login() {
       setLoading(true);
       setError("");
 
-      console.log("🔄 Sending Google credential to backend...");
-
       const response = await api.post("/api/auth/google", {
-        credential: credentialResponse.credential,
+        credential: credential,
       });
 
-      console.log("✅ Backend authentication successful");
-      console.log("Backend response:", response.data);
+      console.log("Google authentication successful:", response.data);
 
-      // Save backend response if your backend returns a token
+      // Store token if your backend returns one
       if (response.data?.access_token) {
         localStorage.setItem(
           "access_token",
@@ -39,7 +37,7 @@ function Login() {
         );
       }
 
-      // Save user information if returned
+      // Store user if returned
       if (response.data?.user) {
         localStorage.setItem(
           "user",
@@ -47,45 +45,27 @@ function Login() {
         );
       }
 
-      // Go to dashboard
+      // Login successful
       navigate("/dashboard");
 
-    } catch (error) {
-      console.error("❌ Backend authentication failed");
+    } catch (err) {
+      console.error("Google authentication error:", err);
 
-      if (error.response) {
-        console.error("Status:", error.response.status);
-        console.error("Response:", error.response.data);
-
-        if (error.response.status === 401) {
-          setError(
-            "Google authentication failed. Please check that the Google Client ID in Render matches the frontend."
-          );
-        } else if (error.response.status === 404) {
-          setError(
-            "Google login API endpoint was not found."
-          );
-        } else if (error.response.status >= 500) {
-          setError(
-            "The backend server returned an error. Please check Render backend logs."
-          );
-        } else {
-          setError(
-            error.response.data?.detail ||
-            "Unable to complete Google login."
-          );
-        }
-      } else if (error.request) {
-        console.error("No response received from backend:", error.request);
+      if (err.response) {
+        console.error("Backend status:", err.response.status);
+        console.error("Backend response:", err.response.data);
 
         setError(
-          "Unable to connect to the backend. Please check the deployed API."
+          err.response.data?.detail ||
+          "Google authentication failed."
+        );
+      } else if (err.request) {
+        setError(
+          "Unable to connect to the backend. Please try again."
         );
       } else {
-        console.error("Request error:", error.message);
-
         setError(
-          "Something went wrong while signing in."
+          "Something went wrong during Google Sign-In."
         );
       }
     } finally {
@@ -94,11 +74,8 @@ function Login() {
   };
 
   const handleGoogleError = () => {
-    console.error("❌ Google Login Failed");
-
-    setError(
-      "Google Sign-In failed. Please try again."
-    );
+    console.error("Google Sign-In failed.");
+    setError("Google Sign-In failed. Please try again.");
   };
 
   return (
@@ -110,16 +87,12 @@ function Login() {
 
           <h1>AI Resume Analyzer</h1>
 
-          <p>
-            Build a resume that gets interviews
-          </p>
+          <p>Build a resume that gets interviews</p>
         </div>
 
         <div className="login-content">
 
-          <div className="sparkle">
-            ✦
-          </div>
+          <div className="sparkle">✦</div>
 
           <h2>Welcome Back</h2>
 
@@ -132,6 +105,7 @@ function Login() {
             <div className="login-error">
               <span>⚠️</span>
               <span>{error}</span>
+
               <button
                 type="button"
                 onClick={() => setError("")}
@@ -142,6 +116,7 @@ function Login() {
           )}
 
           <div className="google-login-container">
+
             {loading ? (
               <div className="login-loading">
                 <div className="spinner"></div>
@@ -160,6 +135,7 @@ function Login() {
                 width="350"
               />
             )}
+
           </div>
 
           <div className="secure-divider">
