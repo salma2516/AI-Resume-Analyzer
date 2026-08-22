@@ -37,17 +37,75 @@ import Sidebar from "./Sidebar";
 
 const SIDEBAR_WIDTH = 240;
 
+function readStoredUser() {
+  try {
+    for (const key of ["aiResumeUser", "google_user", "user"]) {
+      const raw = localStorage.getItem(key);
+
+      if (!raw) continue;
+
+      const parsed = JSON.parse(raw);
+
+      if (parsed && typeof parsed === "object") {
+        return parsed;
+      }
+    }
+  } catch (error) {
+    console.error("Unable to read stored user:", error);
+  }
+
+  return null;
+}
+
+function getUserName(user) {
+  if (!user || typeof user !== "object") {
+    return "User";
+  }
+
+  const name =
+    user.name ||
+    user.displayName ||
+    user.full_name ||
+    user.fullName ||
+    user.given_name ||
+    user.first_name ||
+    "";
+
+  return String(name).trim() || "User";
+}
+
+function getUserEmail(user) {
+  if (!user || typeof user !== "object") {
+    return "";
+  }
+
+  return String(
+    user.email || user.emailAddress || ""
+  ).trim();
+}
+
+function getUserPicture(user) {
+  if (!user || typeof user !== "object") {
+    return "";
+  }
+
+  return (
+    user.profile_picture ||
+    user.profilePicture ||
+    user.picture ||
+    user.image ||
+    ""
+  );
+}
+
 export default function DashboardLayout({ children }) {
   const navigate = useNavigate();
-  /* =========================================================
-     MOBILE SIDEBAR
-  ========================================================= */
+
+  const [currentUser, setCurrentUser] = useState(
+    () => readStoredUser()
+  );
 
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  /* =========================================================
-     APPEARANCE / DARK MODE
-  ========================================================= */
 
   const [darkMode, setDarkMode] = useState(() => {
     try {
@@ -57,23 +115,34 @@ export default function DashboardLayout({ children }) {
     }
   });
 
-  /* =========================================================
-     NOTIFICATIONS
-  ========================================================= */
+  const [notificationAnchor, setNotificationAnchor] =
+    useState(null);
 
-  const [notificationAnchor, setNotificationAnchor] = useState(null);
+  const [profileAnchor, setProfileAnchor] =
+    useState(null);
+
+  const [profileDialogOpen, setProfileDialogOpen] =
+    useState(false);
+
+  const [settingsOpen, setSettingsOpen] =
+    useState(false);
+
+  const [logoutDialogOpen, setLogoutDialogOpen] =
+    useState(false);
 
   const [notifications, setNotifications] = useState([
     {
       id: 1,
       title: "Welcome to AI Resume Analyzer",
-      message: "Upload your resume to start your analysis.",
+      message:
+        "Upload your resume to start your analysis.",
       read: false,
     },
     {
       id: 2,
       title: "Resume analysis ready",
-      message: "Your AI-powered resume tools are ready to use.",
+      message:
+        "Your AI-powered resume tools are ready to use.",
       read: false,
     },
     {
@@ -85,186 +154,23 @@ export default function DashboardLayout({ children }) {
     },
   ]);
 
-  /* =========================================================
-     PROFILE
-  ========================================================= */
-
-  const [profileAnchor, setProfileAnchor] = useState(null);
-
-  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
-
-  /* =========================================================
-     SETTINGS
-  ========================================================= */
-
-  const [settingsOpen, setSettingsOpen] = useState(false);
-
-  /* =========================================================
-     FANCY LOGOUT CONFIRMATION
-  ========================================================= */
-
-  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
-
-  /* =========================================================
-     THEME EFFECT
-  ========================================================= */
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(
-        "aiResumeTheme",
-        darkMode ? "dark" : "light"
-      );
-    } catch {
-      // Ignore localStorage errors.
-    }
-
-    document.body.style.backgroundColor = darkMode
-      ? "#0F172A"
-      : "#F5F7FB";
-
-    document.body.style.transition =
-      "background-color 0.25s ease";
-  }, [darkMode]);
-
-  /* =========================================================
-     MOBILE DRAWER
-  ========================================================= */
-
-  const handleDrawerToggle = () => {
-    setMobileOpen((previous) => !previous);
-  };
-
-  /* =========================================================
-     APPEARANCE
-  ========================================================= */
-
-  const handleThemeToggle = () => {
-    setDarkMode((previous) => !previous);
-  };
-
-  /* =========================================================
-     NOTIFICATIONS
-  ========================================================= */
-
-  const handleNotificationOpen = (event) => {
-    setNotificationAnchor(event.currentTarget);
-  };
-
-  const handleNotificationClose = () => {
-    setNotificationAnchor(null);
-  };
-
-  const markAllNotificationsRead = () => {
-    setNotifications((previous) =>
-      previous.map((notification) => ({
-        ...notification,
-        read: true,
-      }))
-    );
-
-    setNotificationAnchor(null);
-  };
-
-  const markNotificationRead = (id) => {
-    setNotifications((previous) =>
-      previous.map((notification) =>
-        notification.id === id
-          ? {
-              ...notification,
-              read: true,
-            }
-          : notification
-      )
-    );
-  };
-
-  /* =========================================================
-     PROFILE MENU
-  ========================================================= */
-
-  const handleProfileOpen = (event) => {
-    setProfileAnchor(event.currentTarget);
-  };
-
-  const handleProfileClose = () => {
-    setProfileAnchor(null);
-  };
-
-  const handleProfileClick = () => {
-    handleProfileClose();
-    setProfileDialogOpen(true);
-  };
-
-  const handleProfileDialogClose = () => {
-    setProfileDialogOpen(false);
-  };
-
-  /* =========================================================
-     SETTINGS
-  ========================================================= */
-
-  const handleSettingsClick = () => {
-    handleProfileClose();
-    setSettingsOpen(true);
-  };
-
-  const handleSettingsClose = () => {
-    setSettingsOpen(false);
-  };
-
-  /* =========================================================
-     LOGOUT
-  ========================================================= */
-
-  const handleLogout = () => {
-    handleProfileClose();
-    setLogoutDialogOpen(true);
-  };
-
-  const handleLogoutCancel = () => {
-    setLogoutDialogOpen(false);
-  };
-
-  const handleLogoutConfirm = () => {
-    try {
-      // Clear application authentication/session data.
-      localStorage.removeItem("isLoggedIn");
-      localStorage.removeItem("google_credential");
-      localStorage.removeItem("google_user");
-      localStorage.removeItem("user");
-      localStorage.removeItem("aiResumeUser");
-      localStorage.removeItem("aiResumeToken");
-    } catch {
-      // Ignore localStorage errors.
-    }
-
-    // Sign out from the Google OAuth session.
-    try {
-      googleLogout();
-    } catch {
-      // Continue to the login page even if Google logout fails.
-    }
-
-    setLogoutDialogOpen(false);
-    setSettingsOpen(false);
-    setNotificationAnchor(null);
-
-    // Return to the Google authentication page.
-    navigate("/login", { replace: true });
-  };
-
-  /* =========================================================
-     UNREAD NOTIFICATION COUNT
-  ========================================================= */
+  /*
+   * IMPORTANT FIX
+   *
+   * These values MUST be declared inside the component.
+   * This fixes:
+   *
+   * ReferenceError: userName is not defined
+   */
+  const userName = getUserName(currentUser);
+  const userEmail = getUserEmail(currentUser);
+  const userPicture = getUserPicture(currentUser);
+  const userInitial =
+    userName.slice(0, 1).toUpperCase() || "U";
 
   const unreadCount = notifications.filter(
-    (notification) => !notification.read
+    (item) => !item.read
   ).length;
-
-  /* =========================================================
-     COLORS
-  ========================================================= */
 
   const colors = {
     background: darkMode ? "#0F172A" : "#F5F7FB",
@@ -275,29 +181,95 @@ export default function DashboardLayout({ children }) {
     paper: darkMode ? "#1E293B" : "#FFFFFF",
   };
 
-  /* =========================================================
-     RENDER
-  ========================================================= */
+  /*
+   * Keep user information synchronized if another
+   * component updates localStorage.
+   */
+  useEffect(() => {
+    const syncUser = () => {
+      setCurrentUser(readStoredUser());
+    };
+
+    window.addEventListener("storage", syncUser);
+
+    syncUser();
+
+    return () => {
+      window.removeEventListener("storage", syncUser);
+    };
+  }, []);
+
+  /*
+   * Save theme preference.
+   */
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "aiResumeTheme",
+        darkMode ? "dark" : "light"
+      );
+    } catch {
+      // Ignore storage errors.
+    }
+
+    document.body.style.backgroundColor =
+      colors.background;
+
+    document.body.style.transition =
+      "background-color 0.25s ease";
+  }, [darkMode, colors.background]);
+
+  /*
+   * Logout
+   */
+  const handleLogoutConfirm = () => {
+    try {
+      [
+        "isLoggedIn",
+        "google_credential",
+        "google_user",
+        "user",
+        "aiResumeUser",
+        "aiResumeToken",
+      ].forEach((key) => {
+        localStorage.removeItem(key);
+      });
+    } catch {
+      // Continue to login even if storage cleanup fails.
+    }
+
+    try {
+      googleLogout();
+    } catch {
+      // Continue to login if Google logout fails.
+    }
+
+    setCurrentUser(null);
+    setLogoutDialogOpen(false);
+    setSettingsOpen(false);
+    setProfileDialogOpen(false);
+    setProfileAnchor(null);
+    setNotificationAnchor(null);
+    setMobileOpen(false);
+
+    navigate("/login", {
+      replace: true,
+    });
+  };
 
   return (
     <Box
       sx={{
         width: "100%",
         minHeight: "100vh",
-        margin: 0,
-        padding: 0,
         display: "flex",
         backgroundColor: colors.background,
         color: colors.text,
         overflowX: "hidden",
         boxSizing: "border-box",
-        transition:
-          "background-color 0.25s ease, color 0.25s ease",
       }}
     >
-      {/* =====================================================
-          DESKTOP SIDEBAR
-      ===================================================== */}
+      {/* DESKTOP SIDEBAR */}
 
       <Box
         sx={{
@@ -335,14 +307,12 @@ export default function DashboardLayout({ children }) {
         </Drawer>
       </Box>
 
-      {/* =====================================================
-          MOBILE SIDEBAR
-      ===================================================== */}
+      {/* MOBILE SIDEBAR */}
 
       <Drawer
         variant="temporary"
         open={mobileOpen}
-        onClose={handleDrawerToggle}
+        onClose={() => setMobileOpen(false)}
         ModalProps={{
           keepMounted: true,
         }}
@@ -364,9 +334,7 @@ export default function DashboardLayout({ children }) {
         <Sidebar />
       </Drawer>
 
-      {/* =====================================================
-          MAIN APPLICATION
-      ===================================================== */}
+      {/* MAIN CONTENT */}
 
       <Box
         sx={{
@@ -383,15 +351,11 @@ export default function DashboardLayout({ children }) {
           minHeight: "100vh",
           display: "flex",
           flexDirection: "column",
-          margin: 0,
-          padding: 0,
           boxSizing: "border-box",
           overflowX: "hidden",
         }}
       >
-        {/* ===================================================
-            TOP HEADER
-        =================================================== */}
+        {/* HEADER */}
 
         <Box
           component="header"
@@ -417,12 +381,9 @@ export default function DashboardLayout({ children }) {
             position: "sticky",
             top: 0,
             zIndex: 1100,
-            transition: "background-color 0.25s ease",
           }}
         >
-          {/* =================================================
-              LEFT HEADER
-          ================================================= */}
+          {/* TITLE */}
 
           <Box
             sx={{
@@ -433,7 +394,9 @@ export default function DashboardLayout({ children }) {
             }}
           >
             <IconButton
-              onClick={handleDrawerToggle}
+              onClick={() =>
+                setMobileOpen((value) => !value)
+              }
               sx={{
                 display: {
                   xs: "flex",
@@ -464,11 +427,7 @@ export default function DashboardLayout({ children }) {
             </Typography>
           </Box>
 
-          {/* =================================================
-              RIGHT HEADER
-              
-              SEARCH REMOVED COMPLETELY
-          ================================================= */}
+          {/* HEADER ACTIONS */}
 
           <Box
             sx={{
@@ -481,11 +440,15 @@ export default function DashboardLayout({ children }) {
               flexShrink: 0,
             }}
           >
-            {/* NOTIFICATIONS */}
+            {/* Notifications */}
 
             <Tooltip title="Notifications">
               <IconButton
-                onClick={handleNotificationOpen}
+                onClick={(event) =>
+                  setNotificationAnchor(
+                    event.currentTarget
+                  )
+                }
                 sx={{
                   color: colors.text,
                 }}
@@ -500,7 +463,7 @@ export default function DashboardLayout({ children }) {
               </IconButton>
             </Tooltip>
 
-            {/* APPEARANCE */}
+            {/* Dark Mode */}
 
             <Tooltip
               title={
@@ -510,7 +473,9 @@ export default function DashboardLayout({ children }) {
               }
             >
               <IconButton
-                onClick={handleThemeToggle}
+                onClick={() =>
+                  setDarkMode((value) => !value)
+                }
                 sx={{
                   color: colors.text,
                 }}
@@ -523,36 +488,45 @@ export default function DashboardLayout({ children }) {
               </IconButton>
             </Tooltip>
 
-            {/* PROFILE */}
+            {/* Profile */}
 
             <Tooltip title="Profile">
               <IconButton
-                onClick={handleProfileOpen}
+                onClick={(event) =>
+                  setProfileAnchor(
+                    event.currentTarget
+                  )
+                }
                 sx={{
                   ml: 0.5,
                   p: 0,
                 }}
               >
                 <Avatar
+                  src={userPicture || undefined}
+                  alt={userName}
+                  imgProps={{
+                    onError: (event) => {
+                      event.currentTarget.style.display =
+                        "none";
+                    },
+                  }}
                   sx={{
                     width: 38,
                     height: 38,
                     background:
                       "linear-gradient(135deg,#2563EB,#7C3AED)",
                     fontWeight: 700,
-                    cursor: "pointer",
                   }}
                 >
-                  S
+                  {!userPicture && userInitial}
                 </Avatar>
               </IconButton>
             </Tooltip>
           </Box>
         </Box>
 
-        {/* ===================================================
-            CONTENT
-        =================================================== */}
+        {/* PAGE CONTENT */}
 
         <Box
           component="main"
@@ -561,7 +535,6 @@ export default function DashboardLayout({ children }) {
             maxWidth: "100%",
             minWidth: 0,
             flex: 1,
-            margin: 0,
             boxSizing: "border-box",
             px: {
               xs: 1.5,
@@ -582,200 +555,14 @@ export default function DashboardLayout({ children }) {
         </Box>
       </Box>
 
-      {/* =====================================================
-          FANCY LOGOUT CONFIRMATION
-      ===================================================== */}
-
-      <Dialog
-        open={logoutDialogOpen}
-        onClose={handleLogoutCancel}
-        fullWidth
-        maxWidth="xs"
-        PaperProps={{
-          sx: {
-            borderRadius: 4,
-            overflow: "hidden",
-            backgroundColor: colors.paper,
-            color: colors.text,
-            boxShadow: darkMode
-              ? "0 25px 70px rgba(0,0,0,0.55)"
-              : "0 25px 70px rgba(15,23,42,0.25)",
-          },
-        }}
-      >
-        {/* Gradient header */}
-        <Box
-          sx={{
-            position: "relative",
-            px: 3,
-            pt: 4,
-            pb: 3,
-            textAlign: "center",
-            background:
-              "linear-gradient(135deg,#2563EB 0%,#7C3AED 100%)",
-            color: "#FFFFFF",
-          }}
-        >
-          <IconButton
-            onClick={handleLogoutCancel}
-            sx={{
-              position: "absolute",
-              top: 10,
-              right: 10,
-              color: "#FFFFFF",
-              backgroundColor: "rgba(255,255,255,0.12)",
-              "&:hover": {
-                backgroundColor: "rgba(255,255,255,0.22)",
-              },
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
-
-          <Box
-            sx={{
-              width: 68,
-              height: 68,
-              mx: "auto",
-              mb: 2,
-              borderRadius: "50%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: "rgba(255,255,255,0.16)",
-              border: "1px solid rgba(255,255,255,0.3)",
-            }}
-          >
-            <LogoutIcon sx={{ fontSize: 34 }} />
-          </Box>
-
-          <Typography
-            variant="h5"
-            sx={{
-              fontWeight: 800,
-              letterSpacing: "-0.02em",
-            }}
-          >
-            Sign out?
-          </Typography>
-
-          <Typography
-            sx={{
-              mt: 0.7,
-              opacity: 0.9,
-              fontSize: "0.95rem",
-            }}
-          >
-            You're about to leave your AI Resume Analyzer session.
-          </Typography>
-        </Box>
-
-        <DialogContent
-          sx={{
-            px: 3,
-            pt: 3,
-            pb: 1,
-          }}
-        >
-          <Paper
-            elevation={0}
-            sx={{
-              p: 2,
-              borderRadius: 3,
-              backgroundColor: darkMode
-                ? "#0F172A"
-                : "#F8FAFC",
-              border: `1px solid ${colors.border}`,
-            }}
-          >
-            <Typography
-              sx={{
-                fontWeight: 700,
-                color: colors.text,
-                mb: 0.6,
-              }}
-            >
-              Your session will be closed
-            </Typography>
-
-            <Typography
-              variant="body2"
-              sx={{
-                color: colors.secondary,
-                lineHeight: 1.6,
-              }}
-            >
-              You'll be redirected to Google authentication and can sign
-              in again whenever you're ready.
-            </Typography>
-          </Paper>
-        </DialogContent>
-
-        <DialogActions
-          sx={{
-            px: 3,
-            pb: 3,
-            pt: 2,
-            gap: 1.2,
-          }}
-        >
-          <Button
-            onClick={handleLogoutCancel}
-            variant="outlined"
-            fullWidth
-            sx={{
-              minHeight: 46,
-              borderRadius: 2.5,
-              textTransform: "none",
-              fontWeight: 700,
-              borderColor: colors.border,
-              color: colors.text,
-              "&:hover": {
-                borderColor: "#94A3B8",
-                backgroundColor: darkMode
-                  ? "#1E293B"
-                  : "#F8FAFC",
-              },
-            }}
-          >
-            Stay Signed In
-          </Button>
-
-          <Button
-            onClick={handleLogoutConfirm}
-            variant="contained"
-            startIcon={<LogoutIcon />}
-            fullWidth
-            sx={{
-              minHeight: 46,
-              borderRadius: 2.5,
-              textTransform: "none",
-              fontWeight: 800,
-              background:
-                "linear-gradient(135deg,#EF4444,#DC2626)",
-              boxShadow:
-                "0 8px 20px rgba(220,38,38,0.25)",
-              "&:hover": {
-                background:
-                  "linear-gradient(135deg,#DC2626,#B91C1C)",
-                boxShadow:
-                  "0 10px 24px rgba(220,38,38,0.32)",
-              },
-            }}
-          >
-            Sign Out
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* =====================================================
-          NOTIFICATION MENU
-      ===================================================== */}
+      {/* NOTIFICATIONS MENU */}
 
       <Menu
         anchorEl={notificationAnchor}
         open={Boolean(notificationAnchor)}
-        onClose={handleNotificationClose}
+        onClose={() =>
+          setNotificationAnchor(null)
+        }
         PaperProps={{
           sx: {
             width: {
@@ -787,8 +574,6 @@ export default function DashboardLayout({ children }) {
             borderRadius: 2,
             backgroundColor: colors.paper,
             color: colors.text,
-            boxShadow:
-              "0 12px 35px rgba(15,23,42,0.18)",
           },
         }}
       >
@@ -814,10 +599,18 @@ export default function DashboardLayout({ children }) {
             <Button
               size="small"
               startIcon={<DoneAllIcon />}
-              onClick={markAllNotificationsRead}
+              onClick={() => {
+                setNotifications((items) =>
+                  items.map((item) => ({
+                    ...item,
+                    read: true,
+                  }))
+                );
+
+                setNotificationAnchor(null);
+              }}
               sx={{
                 textTransform: "none",
-                fontWeight: 600,
               }}
             >
               Read all
@@ -827,126 +620,137 @@ export default function DashboardLayout({ children }) {
 
         <Divider />
 
-        {notifications.length === 0 ? (
-          <Box
+        {notifications.map((notification) => (
+          <MenuItem
+            key={notification.id}
+            onClick={() =>
+              setNotifications((items) =>
+                items.map((item) =>
+                  item.id === notification.id
+                    ? {
+                        ...item,
+                        read: true,
+                      }
+                    : item
+                )
+              )
+            }
             sx={{
+              display: "block",
+              whiteSpace: "normal",
+              py: 1.5,
               px: 2,
-              py: 3,
-              textAlign: "center",
+              borderLeft: notification.read
+                ? "3px solid transparent"
+                : "3px solid #2563EB",
+              backgroundColor: notification.read
+                ? "transparent"
+                : darkMode
+                ? "#172554"
+                : "#EFF6FF",
             }}
           >
             <Typography
-              variant="body2"
-              color={colors.secondary}
-            >
-              No notifications.
-            </Typography>
-          </Box>
-        ) : (
-          notifications.map((notification) => (
-            <MenuItem
-              key={notification.id}
-              onClick={() =>
-                markNotificationRead(notification.id)
-              }
               sx={{
-                display: "block",
-                whiteSpace: "normal",
-                py: 1.5,
-                px: 2,
-                borderLeft: notification.read
-                  ? "3px solid transparent"
-                  : "3px solid #2563EB",
-                backgroundColor: notification.read
-                  ? "transparent"
-                  : darkMode
-                  ? "#172554"
-                  : "#EFF6FF",
-                "&:hover": {
-                  backgroundColor: darkMode
-                    ? "#1E293B"
-                    : "#F8FAFC",
-                },
+                fontWeight:
+                  notification.read ? 500 : 700,
+                color: colors.text,
+                mb: 0.4,
               }}
             >
-              <Typography
-                sx={{
-                  fontWeight: notification.read
-                    ? 500
-                    : 700,
-                  color: colors.text,
-                  mb: 0.4,
-                }}
-              >
-                {notification.title}
-              </Typography>
+              {notification.title}
+            </Typography>
 
-              <Typography
-                variant="body2"
-                sx={{
-                  color: colors.secondary,
-                  lineHeight: 1.4,
-                }}
-              >
-                {notification.message}
-              </Typography>
-            </MenuItem>
-          ))
-        )}
+            <Typography
+              variant="body2"
+              sx={{
+                color: colors.secondary,
+                lineHeight: 1.4,
+              }}
+            >
+              {notification.message}
+            </Typography>
+          </MenuItem>
+        ))}
       </Menu>
 
-      {/* =====================================================
-          PROFILE MENU
-      ===================================================== */}
+      {/* PROFILE MENU */}
 
       <Menu
         anchorEl={profileAnchor}
         open={Boolean(profileAnchor)}
-        onClose={handleProfileClose}
+        onClose={() =>
+          setProfileAnchor(null)
+        }
         PaperProps={{
           sx: {
-            width: 230,
+            width: 260,
             mt: 1,
             borderRadius: 2,
             backgroundColor: colors.paper,
             color: colors.text,
-            boxShadow:
-              "0 12px 35px rgba(15,23,42,0.18)",
           },
         }}
       >
-        {/* PROFILE HEADER */}
-
         <Box
           sx={{
             px: 2,
             py: 1.5,
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
           }}
         >
-          <Typography
+          <Avatar
+            src={userPicture || undefined}
+            alt={userName}
+            imgProps={{
+              onError: (event) => {
+                event.currentTarget.style.display =
+                  "none";
+              },
+            }}
+            sx={{
+              background:
+                "linear-gradient(135deg,#2563EB,#7C3AED)",
+            }}
+          >
+            {!userPicture && userInitial}
+          </Avatar>
+
+          <Box sx={{ minWidth: 0 }}>
+            <Typography
               sx={{
                 fontWeight: 700,
                 color: colors.text,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
               }}
             >
               {userName}
             </Typography>
 
-          <Typography
-            variant="body2"
-            sx={{
-              color: colors.secondary,
-            }}
-          >
-            AI Resume Analyzer
-          </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                color: colors.secondary,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {userEmail || "AI Resume Analyzer"}
+            </Typography>
+          </Box>
         </Box>
 
         <Divider />
 
-        {/* PROFILE */}
-
-        <MenuItem onClick={handleProfileClick}>
+        <MenuItem
+          onClick={() => {
+            setProfileAnchor(null);
+            setProfileDialogOpen(true);
+          }}
+        >
           <AccountCircleOutlinedIcon
             sx={{
               mr: 1.5,
@@ -954,12 +758,17 @@ export default function DashboardLayout({ children }) {
             }}
           />
 
-          <Typography>Profile</Typography>
+          <Typography>
+            Profile
+          </Typography>
         </MenuItem>
 
-        {/* SETTINGS */}
-
-        <MenuItem onClick={handleSettingsClick}>
+        <MenuItem
+          onClick={() => {
+            setProfileAnchor(null);
+            setSettingsOpen(true);
+          }}
+        >
           <SettingsOutlinedIcon
             sx={{
               mr: 1.5,
@@ -967,15 +776,18 @@ export default function DashboardLayout({ children }) {
             }}
           />
 
-          <Typography>Settings</Typography>
+          <Typography>
+            Settings
+          </Typography>
         </MenuItem>
 
         <Divider />
 
-        {/* LOGOUT */}
-
         <MenuItem
-          onClick={handleLogout}
+          onClick={() => {
+            setProfileAnchor(null);
+            setLogoutDialogOpen(true);
+          }}
           sx={{
             color: "#DC2626",
           }}
@@ -986,17 +798,19 @@ export default function DashboardLayout({ children }) {
             }}
           />
 
-          <Typography>Logout</Typography>
+          <Typography>
+            Logout
+          </Typography>
         </MenuItem>
       </Menu>
 
-      {/* =====================================================
-          PROFILE DIALOG
-      ===================================================== */}
+      {/* PROFILE DIALOG */}
 
       <Dialog
         open={profileDialogOpen}
-        onClose={handleProfileDialogClose}
+        onClose={() =>
+          setProfileDialogOpen(false)
+        }
         fullWidth
         maxWidth="sm"
         PaperProps={{
@@ -1010,7 +824,6 @@ export default function DashboardLayout({ children }) {
         <DialogTitle
           sx={{
             display: "flex",
-            alignItems: "center",
             justifyContent: "space-between",
             fontWeight: 700,
           }}
@@ -1018,7 +831,9 @@ export default function DashboardLayout({ children }) {
           Candidate Profile
 
           <IconButton
-            onClick={handleProfileDialogClose}
+            onClick={() =>
+              setProfileDialogOpen(false)
+            }
             sx={{
               color: colors.text,
             }}
@@ -1038,6 +853,14 @@ export default function DashboardLayout({ children }) {
             }}
           >
             <Avatar
+              src={userPicture || undefined}
+              alt={userName}
+              imgProps={{
+                onError: (event) => {
+                  event.currentTarget.style.display =
+                    "none";
+                },
+              }}
               sx={{
                 width: 80,
                 height: 80,
@@ -1048,12 +871,13 @@ export default function DashboardLayout({ children }) {
                   "linear-gradient(135deg,#2563EB,#7C3AED)",
               }}
             >
-              S
+              {!userPicture && userInitial}
             </Avatar>
 
             <Typography
+              variant="h6"
               sx={{
-                fontWeight: 700,
+                fontWeight: 800,
                 color: colors.text,
               }}
             >
@@ -1061,12 +885,23 @@ export default function DashboardLayout({ children }) {
             </Typography>
 
             <Typography
+              variant="body2"
               sx={{
+                color: colors.secondary,
                 mt: 0.5,
+              }}
+            >
+              {userEmail || "No email available"}
+            </Typography>
+
+            <Typography
+              sx={{
+                mt: 1,
                 color: colors.secondary,
               }}
             >
-              Aspiring Machine Learning Engineer
+              {currentUser?.role ||
+                "Aspiring Machine Learning Engineer"}
             </Typography>
           </Box>
 
@@ -1130,11 +965,12 @@ export default function DashboardLayout({ children }) {
           }}
         >
           <Button
-            onClick={handleProfileDialogClose}
+            onClick={() =>
+              setProfileDialogOpen(false)
+            }
             variant="contained"
             sx={{
               borderRadius: 2,
-              px: 3,
               textTransform: "none",
               fontWeight: 700,
             }}
@@ -1144,13 +980,13 @@ export default function DashboardLayout({ children }) {
         </DialogActions>
       </Dialog>
 
-      {/* =====================================================
-          SETTINGS DIALOG
-      ===================================================== */}
+      {/* SETTINGS DIALOG */}
 
       <Dialog
         open={settingsOpen}
-        onClose={handleSettingsClose}
+        onClose={() =>
+          setSettingsOpen(false)
+        }
         fullWidth
         maxWidth="sm"
         PaperProps={{
@@ -1164,7 +1000,6 @@ export default function DashboardLayout({ children }) {
         <DialogTitle
           sx={{
             display: "flex",
-            alignItems: "center",
             justifyContent: "space-between",
             fontWeight: 700,
           }}
@@ -1172,7 +1007,9 @@ export default function DashboardLayout({ children }) {
           Settings
 
           <IconButton
-            onClick={handleSettingsClose}
+            onClick={() =>
+              setSettingsOpen(false)
+            }
             sx={{
               color: colors.text,
             }}
@@ -1207,7 +1044,11 @@ export default function DashboardLayout({ children }) {
               control={
                 <Switch
                   checked={darkMode}
-                  onChange={handleThemeToggle}
+                  onChange={() =>
+                    setDarkMode(
+                      (value) => !value
+                    )
+                  }
                 />
               }
               label={
@@ -1228,8 +1069,8 @@ export default function DashboardLayout({ children }) {
               color: colors.secondary,
             }}
           >
-            Your appearance preference is saved
-            automatically on this device.
+            Your appearance preference is
+            saved automatically on this device.
           </Typography>
         </DialogContent>
 
@@ -1240,16 +1081,190 @@ export default function DashboardLayout({ children }) {
           }}
         >
           <Button
-            onClick={handleSettingsClose}
+            onClick={() =>
+              setSettingsOpen(false)
+            }
             variant="contained"
             sx={{
               borderRadius: 2,
-              px: 3,
               textTransform: "none",
               fontWeight: 700,
             }}
           >
             Done
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* LOGOUT DIALOG */}
+
+      <Dialog
+        open={logoutDialogOpen}
+        onClose={() =>
+          setLogoutDialogOpen(false)
+        }
+        fullWidth
+        maxWidth="xs"
+        PaperProps={{
+          sx: {
+            borderRadius: 4,
+            overflow: "hidden",
+            backgroundColor: colors.paper,
+            color: colors.text,
+          },
+        }}
+      >
+        <Box
+          sx={{
+            position: "relative",
+            px: 3,
+            pt: 4,
+            pb: 3,
+            textAlign: "center",
+            background:
+              "linear-gradient(135deg,#2563EB 0%,#7C3AED 100%)",
+            color: "#FFFFFF",
+          }}
+        >
+          <IconButton
+            onClick={() =>
+              setLogoutDialogOpen(false)
+            }
+            sx={{
+              position: "absolute",
+              top: 10,
+              right: 10,
+              color: "#FFFFFF",
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+
+          <Box
+            sx={{
+              width: 68,
+              height: 68,
+              mx: "auto",
+              mb: 2,
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor:
+                "rgba(255,255,255,0.16)",
+            }}
+          >
+            <LogoutIcon
+              sx={{
+                fontSize: 34,
+              }}
+            />
+          </Box>
+
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 800,
+            }}
+          >
+            Sign out?
+          </Typography>
+
+          <Typography
+            sx={{
+              mt: 0.7,
+              opacity: 0.9,
+              fontSize: "0.95rem",
+            }}
+          >
+            You&apos;re about to leave your AI
+            Resume Analyzer session.
+          </Typography>
+        </Box>
+
+        <DialogContent
+          sx={{
+            px: 3,
+            pt: 3,
+            pb: 1,
+          }}
+        >
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2,
+              borderRadius: 3,
+              backgroundColor: darkMode
+                ? "#0F172A"
+                : "#F8FAFC",
+              border: `1px solid ${colors.border}`,
+            }}
+          >
+            <Typography
+              sx={{
+                fontWeight: 700,
+                color: colors.text,
+                mb: 0.6,
+              }}
+            >
+              Your session will be closed
+            </Typography>
+
+            <Typography
+              variant="body2"
+              sx={{
+                color: colors.secondary,
+                lineHeight: 1.6,
+              }}
+            >
+              You&apos;ll be redirected to the
+              login page and can sign in again
+              whenever you&apos;re ready.
+            </Typography>
+          </Paper>
+        </DialogContent>
+
+        <DialogActions
+          sx={{
+            px: 3,
+            pb: 3,
+            pt: 2,
+            gap: 1.2,
+          }}
+        >
+          <Button
+            onClick={() =>
+              setLogoutDialogOpen(false)
+            }
+            variant="outlined"
+            fullWidth
+            sx={{
+              minHeight: 46,
+              borderRadius: 2.5,
+              textTransform: "none",
+              fontWeight: 700,
+              borderColor: colors.border,
+              color: colors.text,
+            }}
+          >
+            Stay Signed In
+          </Button>
+
+          <Button
+            onClick={handleLogoutConfirm}
+            variant="contained"
+            startIcon={<LogoutIcon />}
+            fullWidth
+            sx={{
+              minHeight: 46,
+              borderRadius: 2.5,
+              textTransform: "none",
+              fontWeight: 800,
+              background:
+                "linear-gradient(135deg,#EF4444,#DC2626)",
+            }}
+          >
+            Sign Out
           </Button>
         </DialogActions>
       </Dialog>
