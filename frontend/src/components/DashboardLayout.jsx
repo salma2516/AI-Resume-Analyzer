@@ -924,13 +924,13 @@ export default function DashboardLayout({ children }) {
           }}
         >
           <Typography
-            sx={{
-              fontWeight: 700,
-              color: colors.text,
-            }}
-          >
-            Salma
-          </Typography>
+              sx={{
+                fontWeight: 700,
+                color: colors.text,
+              }}
+            >
+              {userName}
+            </Typography>
 
           <Typography
             variant="body2"
@@ -1052,13 +1052,12 @@ export default function DashboardLayout({ children }) {
             </Avatar>
 
             <Typography
-              variant="h5"
-              fontWeight={700}
               sx={{
+                fontWeight: 700,
                 color: colors.text,
               }}
             >
-              Salma
+              {userName}
             </Typography>
 
             <Typography
